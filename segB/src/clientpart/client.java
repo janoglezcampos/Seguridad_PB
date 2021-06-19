@@ -35,10 +35,10 @@ import server.*;
 
 public class client {
 
-	static TrustManager[] trustManagers;
-	static KeyManager[] keyManagers ;
-	static KeyStore trust;
-	static KeyStore key;
+	private static TrustManager[] trustManagers;
+	private static KeyManager[] keyManagers ;
+	private static KeyStore trust;
+	private static KeyStore key;
 
 	public static void main(String[] args)throws IOException, KeyManagementException, UnrecoverableKeyException, KeyStoreException, SignatureException {
 
