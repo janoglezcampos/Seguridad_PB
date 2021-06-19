@@ -30,10 +30,9 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import server.*;
 
 
-public class client {
+public class Client {
 
 	private static TrustManager[] trustManagers;
 	private static KeyManager[] keyManagers ;
@@ -46,7 +45,7 @@ public class client {
 		try {
 
 			if (args.length!=2) {
-				System.out.println("N�mero de parametros incorrecto, introduzca keyStore y trustStore");
+				System.out.println("Número de parametros incorrecto, introduzca keyStore y trustStore");
 				System.exit(0);
 			}
 
@@ -70,7 +69,7 @@ public class client {
 
 
 		System.out.println("Selecione la operación a realizar (teclee el número): "
-				+ "\n 1.Registrar documento (nombreDoc, tipoCondencialidad, E_PKS(K), E_K(documento), firmaDoc, CertFirma_C, CertCifrado_C) "
+				+ "\n 1.Registrar documento (nombreDoc, tipoConfidencialidad, E_PKS(K), E_K(documento), firmaDoc, CertFirma_C, CertCifrado_C) "
 				+ "\n 2.Listar (Tipo, CertAuth_C) "
 				+ "\n 3.Recuperar documento (CertAuth_C, idRegistro)");
 
@@ -95,6 +94,7 @@ public class client {
 				} catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | CertificateException
 						| IOException e) {
 					e.printStackTrace();
+					System.exit(0);
 				}
 
 
@@ -107,7 +107,7 @@ public class client {
 				String confidencialidad2= reader.readLine();
 				System.out.println("Introduzca el CertAuth");
 				String cert_listar= reader.readLine();
-				System.out.println("Introduzca a contrase�a del keyStore");
+				System.out.println("Introduzca a contraseña del keyStore");
 				String passwd_key2=reader.readLine();
 				try {
 					System.out.println("INICIANDO ALMACENES");
@@ -149,7 +149,7 @@ public class client {
 				control=1;
 				break;
 
-			default: System.out.println("Debe sellecionar un n�mero de operaci�n v�lido");
+			default: System.out.println("Debe sellecionar un número de operación válido");
 			break;
 
 			}
@@ -252,7 +252,7 @@ public class client {
 		//trustedStore.load(new FileInputStream("C:\\Users\\usuario\\Desktop\\alamcenes/clientTrustedCerts.jks"), "clientpass".toCharArray());
 		trustedStore.load(new FileInputStream(args[1]), passwd_key.toCharArray()); //supuestamente no hay que poner contrase�a es la misma pero no se deberia i dont know 
 		trust=trustedStore;
-		System.out.println("Tama�o del trust  "+trust.size());
+		System.out.println("Tamaño del trust  "+trust.size());
 
 		//String name2= "auth";
 		//System.out.println("CLAVE DEL KEY: "+ trust.getCertificate(name2).getPublicKey());
@@ -278,7 +278,7 @@ public class client {
 		return trust;
 	}
 
-	public static KeyStore getKeymanagers () {
+	public static KeyStore getKeyStore () {
 		return key;
 	}
 

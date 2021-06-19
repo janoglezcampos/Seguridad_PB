@@ -22,7 +22,6 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
-import clientpart.client;
 
 public class Util3 {
 	
@@ -59,7 +58,7 @@ public class Util3 {
 			            String carpeta_comprobar="";
 			            boolean esprivado=false;
 			            
-			            if(Integer.parseInt(id_registro)<=server.getContador()) { 
+			            if(Integer.parseInt(id_registro)<=Server.getContador()) { 
 			            	File [] contenido =directorio2.listFiles();
 				       		ArrayList <String>  contenido2 = new ArrayList <String>();	
 				       		

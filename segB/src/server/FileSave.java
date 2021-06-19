@@ -29,12 +29,8 @@ import java.util.LinkedList;
 
 
 
-public class fileSave {
+public class FileSave {
 	
-
-
-
-
 	public static String sigRD (byte [] certFirma, byte[] file, byte[] firmaDoc,char[] clave,String confidencialidad) throws CertificateException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException{
 		
 		//SACAMOS IDPROPIETARIO
@@ -47,8 +43,8 @@ public class fileSave {
 		System.out.println("ID PROPIETARIO: "+ idPropietario.toString());
 		
 		// PASAMOS A GENERERAR LA FIRMA DE TODO 
-		int idRegistro= server.getContador();
-		server.setContador(idRegistro+1);
+		int idRegistro= Server.getContador();
+		Server.setContador(idRegistro+1);
 	
 		String sello= sello();
 		byte  F= (byte) idRegistro; //recordar para pasar e imprimir hacer &0xff
@@ -64,7 +60,7 @@ public class fileSave {
 		
 		
 		String name3="firmas";
-		PrivateKey clavekey = (PrivateKey) server.getKeymanagers().getKey(name3, clave);// ponia clientkey
+		PrivateKey clavekey = (PrivateKey) Server.getKeyStore().getKey(name3, clave);// ponia clientkey
 		Signature firma =Signature.getInstance("MD5withRSA");
 		firma.initSign(clavekey);
 		firma.update(conjunto);     /// aqui
