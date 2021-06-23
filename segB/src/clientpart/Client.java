@@ -6,7 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.UnknownHostException;
+import java.net.*;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -15,20 +16,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.util.Enumeration;
+import java.security.cert.*;
+import java.util.*;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.*;
 
 
 
@@ -38,6 +33,9 @@ public class Client {
 	private static KeyManager[] keyManagers ;
 	private static KeyStore trust;
 	private static KeyStore key;
+	private static String ocspURI = "http://127.0.0.1:9999";
+	private static boolean ocspStaplingEnable = false;
+	private static boolean ocspClientEnable = true;
 
 	public static void main(String[] args)throws IOException, KeyManagementException, UnrecoverableKeyException, KeyStoreException, SignatureException {
 
@@ -50,9 +48,11 @@ public class Client {
 			}
 
 			try {
+				store(args,"clientpass");
+				conexion();
 				start(args);
 			} catch (KeyManagementException | UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException
-					| SignatureException | IOException e) {
+					| SignatureException | IOException | CertificateException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -162,11 +162,13 @@ public class Client {
 
 		int port=8080;
 		String[]   cipherSuites = null;
-		String ip= "0.0.0.0";
+		String ip= "127.0.0.1";
+		
 
 		SSLContext sc = null;
 		try {
 			sc = SSLContext.getInstance("TLS");
+			
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -221,7 +223,7 @@ public class Client {
 
 	public static void store(String[] args, String passwd_key) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException {
 
-		KeyStore keyStore = KeyStore.getInstance("JKS");
+		KeyStore keyStore = KeyStore.getInstance("JCEKS");
 		//System.out.println(passwd_key);
 		keyStore.load(new FileInputStream(args[0]),passwd_key.toCharArray());
 
@@ -246,9 +248,7 @@ public class Client {
 
 		keyManagers = kmf.getKeyManagers();
 
-
-
-		KeyStore trustedStore = KeyStore.getInstance("JKS");
+		KeyStore trustedStore = KeyStore.getInstance("JCEKS");
 		//trustedStore.load(new FileInputStream("C:\\Users\\usuario\\Desktop\\alamcenes/clientTrustedCerts.jks"), "clientpass".toCharArray());
 		trustedStore.load(new FileInputStream(args[1]), passwd_key.toCharArray()); //supuestamente no hay que poner contrase�a es la misma pero no se deberia i dont know 
 		trust=trustedStore;
@@ -256,21 +256,49 @@ public class Client {
 
 		//String name2= "auth";
 		//System.out.println("CLAVE DEL KEY: "+ trust.getCertificate(name2).getPublicKey());
+		
 
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-		tmf.init(trustedStore);
-
+		
+		if(ocspClientEnable) {
+			try {
+				CertPathBuilder certBuilder = CertPathBuilder.getInstance("PKIX");
+				PKIXRevocationChecker revocationChecker = (PKIXRevocationChecker) certBuilder.getRevocationChecker();
+				revocationChecker.setOptions(EnumSet.of(PKIXRevocationChecker.Option.NO_FALLBACK));
+				revocationChecker.setOcspResponder(new URI(ocspURI));
+				
+				PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(trustedStore, new X509CertSelector());
+				pkixParams.addCertPathChecker(revocationChecker);
+				pkixParams.setRevocationEnabled(true);
+				tmf.init(new CertPathTrustManagerParameters(pkixParams));
+			}catch(Exception e) {
+				System.out.println("Exception on OCSP setup:" + e);
+				System.exit(0);
+			}
+		}else {
+			tmf.init(trustedStore);
+		}
+		
 		trustManagers = tmf.getTrustManagers();
 
 		System.setProperty("javax.net.ssl.keyStore", args[0]);
-		System.setProperty("javax.net.ssl.keyStoreType",     "JKS");
+		System.setProperty("javax.net.ssl.keyStoreType",     "JCEKS");
 		System.setProperty("javax.net.ssl.keyStorePassword", passwd_key);
 
 		System.setProperty("jdk.security.allowNonCaAnchor", "true" );
 
 		System.setProperty("javax.net.ssl.trustStore", args[1]);
-		System.setProperty("javax.net.ssl.trustStoreType",     "JKS");
+		System.setProperty("javax.net.ssl.trustStoreType",     "JCEKS");
 		System.setProperty("javax.net.ssl.trustStorePassword", passwd_key);
+		
+		if(ocspStaplingEnable || ocspClientEnable) {
+			System.setProperty("com.sun.net.ssl.checkRevocation",        "true");
+			System.setProperty("ocsp.enable",                            "true");
+		}
+		
+		if(ocspStaplingEnable) {
+			System.setProperty("jdk.tls.client.enableStatusRequestExtension",        "true");
+		}
 
 	}
 

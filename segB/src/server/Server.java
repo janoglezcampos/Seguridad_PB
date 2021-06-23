@@ -14,12 +14,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Enumeration;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.*;
 
 
 
@@ -30,7 +25,8 @@ public class Server {
 	private static KeyStore trust;
 	private static  KeyStore key;
 	private static int contador=0;
-
+	private static boolean ocspStaplingEnabled = false;
+	private static String ocspURI="http://127.0.0.1:9999";
 
 	public static int getContador() {
 		return contador;
@@ -69,6 +65,7 @@ public class Server {
 
 		SSLServerSocketFactory ssf = sc.getServerSocketFactory();
 		ServerSocket serverSocket1 = ssf.createServerSocket(port);
+		((SSLServerSocket)serverSocket1).setNeedClientAuth(true);
 
 		while (true) {			
 			Socket aClient = serverSocket1.accept();
@@ -108,9 +105,12 @@ public class Server {
 
 		KeyStore keyStore;
 
-		keyStore = KeyStore.getInstance("JKS");
+		keyStore = KeyStore.getInstance("JCEKS");
 		//keyStore.load(new FileInputStream("C:\\Users\\usuario\\Desktop\\alamcenes/serverkey.jks"),"serverpass".toCharArray());
-		keyStore.load(new FileInputStream(keyStorePath),passKeystore.toCharArray());
+
+
+		char[] clave = passKeystore.toCharArray();
+		keyStore.load(new FileInputStream(keyStorePath),clave);
 
 		//key=KeyStore.getInstance("JKS");
 		//key.load(new FileInputStream(args),args3.toCharArray());;
@@ -126,8 +126,6 @@ public class Server {
 		//String name=alias.nextElement();
 		//System.out.println("Alias del 1 elemento: "+ name);
 		//String name ="certauth";
-
-		char[] clave = passKeystore.toCharArray();
 		//System.out.println("CLAVE DEL KEY: "+ key.getKey(name,clave));
 
 		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
@@ -135,9 +133,9 @@ public class Server {
 		kmf.init(keyStore, clave);
 		keyManagers = kmf.getKeyManagers();
 
-		KeyStore trustedStore = KeyStore.getInstance("JKS");
+		KeyStore trustedStore = KeyStore.getInstance("JCEKS");
 		//trustedStore.load(new FileInputStream("C:\\Users\\usuario\\Desktop\\alamcenes/serverTrustedCerts.jks"), "serverpass".toCharArray());
-		trustedStore.load(new FileInputStream(trustStorePath), clave);  //no deberia tener contra OJO 
+		trustedStore.load(new FileInputStream(trustStorePath), clave);  
 
 		trust=trustedStore;
 		System.out.println("Tamaño del trust  "+trust.size());
@@ -154,16 +152,21 @@ public class Server {
 
 		//MISMA OPINION QUE EN EL CLIENT 
 		System.setProperty("javax.net.ssl.keyStore", keyStorePath);
-		System.setProperty("javax.net.ssl.keyStoreType",     "JKS");
+		System.setProperty("javax.net.ssl.keyStoreType",     "JCEKS");
 		System.setProperty("javax.net.ssl.keyStorePassword",passKeystore);
 
 
 		System.setProperty("jdk.security.allowNonCaAnchor", "true" );
+		System.setProperty("jdk.security.allowNonCaAnchor", "true" );
 
 		System.setProperty("javax.net.ssl.trustStore", trustStorePath);
-		System.setProperty("javax.net.ssl.trustStoreType",     "JKS");
+		System.setProperty("javax.net.ssl.trustStoreType",     "JCEKS");
 		System.setProperty("javax.net.ssl.trustStorePassword", passKeystore);
-
+		
+		if(ocspStaplingEnabled) {
+			System.setProperty("jdk.tls.client.enableStatusRequestExtension", "true");
+			System.setProperty("jdk.tls.stapling.responderURI", ocspURI);
+		}
 	}
 	public static KeyStore getTrust () {
 		return trust;
