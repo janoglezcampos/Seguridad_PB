@@ -17,9 +17,8 @@ public class Client {
 	private static KeyManager[] keyManagers ;
 	private static KeyStore trust;
 	private static KeyStore key;
-	private static String ocspURI = "http://127.0.0.1:9997";
-	private static boolean ocspStaplingEnable = false;
-	private static boolean ocspClientEnable = true;
+	private static boolean ocspEnable = true; //Habilita ocsp stapling
+	private static boolean ocspClientEnable = false; //Habilita ocsp client-side si ocsp stapling está habilitado
 
 	public static void main(String[] args)throws IOException, KeyManagementException, UnrecoverableKeyException, KeyStoreException, SignatureException {
 		System.out.println(System.getProperty("java.version"));
@@ -175,16 +174,22 @@ public class Client {
 
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)); 
-		System.out.println ("Introduzca la CypherSuite: ");
-		String [] cipher= {reader.readLine()};
+		System.out.println ("Introduzca la CypherSuite: (Pulsar ENTER para usar TLS_RSA_WITH_AES_128_CBC_SHA256)");
+		String value = reader.readLine().trim();
+		
+		if("".equals(value) || value.isEmpty()) {
+			value = "TLS_RSA_WITH_AES_256_CBC_SHA256";
+		}
+		
+		String[] cipher = {value};
 
-		System.out.println ("AÑADIENDO: " + cipher[0]);
+		System.out.println ("Usando: " + cipher[0]);
 
 		SSLSocket client = (SSLSocket) ssf.createSocket(ip, port);
 
 		client.setEnabledCipherSuites(cipher);
 
-		System.out.println ("****** CypherSuites Habilitadas en el ssl socket **********");
+		System.out.println ("\n****** CypherSuites Habilitadas en el ssl socket **********");
 
 		String[] cipherSuitesHabilSocket = client.getEnabledCipherSuites();
 		for (int i=0; i<cipherSuitesHabilSocket.length; i++) 
@@ -192,31 +197,30 @@ public class Client {
 
 		System.out.println ("\n*************************************************************");	    
 		System.out.println ("  Comienzo SSL Handshake -- Cliente y Server Autenticados");
-		System.out.println ("*************************************************************");	    
-		System.out.println (Security.getProperty("ocsp.enable"));
+		System.out.println ("*************************************************************\n");
+		System.out.println ("OCSP habilitado: " + System.getProperty("com.sun.net.ssl.checkRevocation"));
+		System.out.println ("OCSP Client-Side habilitado: " + Security.getProperty("ocsp.enable"));
 		client.startHandshake();
 
 
 		System.out.println ("\n*************************************************************");
 		System.out.println ("Fin OK SSL Handshake");
-		System.out.println ("\n*************************************************************");
+		System.out.println ("*************************************************************\n");
 
 		return client;
 
 	}
+	
+	public static boolean ocspProperties(boolean enabled, boolean clientSideEnabled) {
+		System.setProperty("com.sun.net.ssl.checkRevocation", String.valueOf(enabled));
+		Security.setProperty("ocsp.enable", String.valueOf(clientSideEnabled));
+		return enabled;
+	}
 
 	public static void store(String[] args, String passwd_key) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException {
-
-		if(ocspClientEnable) {
-			System.setProperty("com.sun.net.ssl.checkRevocation",        "true");
-			Security.setProperty("ocsp.enable",                            "true");
-		}
 		
-		if(ocspStaplingEnable) {
-			Security.setProperty("ocsp.enable", "false");
-			System.setProperty("com.sun.net.ssl.checkRevocation", 		"true");
-			System.setProperty("jdk.tls.client.enableStatusRequestExtension", "true");
-		}
+		Security.setProperty("ocsp.enable", "true");
+		
 		
 		KeyStore keyStore = KeyStore.getInstance("JCEKS");
 		//System.out.println(passwd_key);
@@ -251,7 +255,9 @@ public class Client {
 
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
 		
-		if(ocspClientEnable || ocspStaplingEnable) {
+		boolean revocationCheck = ocspProperties(ocspEnable, ocspClientEnable);
+		
+		if(revocationCheck) {
 			try {
 				CertPathBuilder certBuilder = CertPathBuilder.getInstance("PKIX");
 				PKIXRevocationChecker revocationChecker = (PKIXRevocationChecker) certBuilder.getRevocationChecker();
