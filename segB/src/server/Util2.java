@@ -79,15 +79,12 @@ public class Util2 {
 					//output.println("\n HAY DOCUMENTOS"); //cambiar
 					output.close();
 
-
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-
 		}.start();
 	}
-
 
 	public static  ArrayList<String> info (String ubicacion) throws IOException {
 
@@ -117,14 +114,11 @@ public class Util2 {
 			contenido2.add(contenido[i].getName());
 		}
 
-
 		for (int i=0; i< contenido2.size(); i ++) {
 
 			if (!names.contains(contenido2.get(i))) {
 				conjunto.add(contenido2.get(i));
-
 			}
-
 		}
 
 		File carpeta2= new File (id);
