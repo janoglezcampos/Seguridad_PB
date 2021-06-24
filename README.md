@@ -14,12 +14,14 @@ Funcionalidad 1:
 * Almacenar todo en un fichero, no en un directorio (server)
 
 Funcionalidad 2:
+* Generar respuestas serverside (server)
 * Enviar certAuth y no issuerDN (cliente)
 * Comprobar certAuth (server)
 * Obtener issuerDN del certAuth (server)
 * Enviar datos como una lista (server)
 
 Funcionalidad 3:
+* Generar respuestas serverside (server)
 * Desecriptar archivo con clave secreta simetrica (server)
 * Encriptar con PGP (server)
 * Desecriptar con PGP (cliente)
