@@ -12,6 +12,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.security.AlgorithmParameters;
+import java.security.KeyStore;
+import java.security.KeyStore.SecretKeyEntry;
 import java.security.Principal;
 import java.security.PublicKey;
 import java.security.Signature;
@@ -201,15 +203,18 @@ public class Util {
 
 							privado.add(fichero);
 
-							KeyGenerator kg= KeyGenerator.getInstance(algoritmo); 
+							KeyGenerator kg= KeyGenerator.getInstance("RC2"); 
 							kg.init(128);
-							SecretKey key_private= kg.generateKey();
-							System.out.println("FORMATO clave de encriptado de info en el server : "+key_private.getFormat());
+							//SecretKey key_private= kg.generateKey();
+							SecretKey keyPrivate = (SecretKey) Server.getKeyStore().getKey("dataenckey",null);
+							KeyStore.SecretKeyEntry secretKeyEntry = (SecretKeyEntry) Server.getKeyStore().getEntry("dataenckey", null);
+							keyPrivate = secretKeyEntry.getSecretKey();
+							System.out.println("FORMATO clave de encriptado de info en el server : "+keyPrivate.getFormat());
 
 							//Ciframos el fichero
-							String concat= algoritmo+"/CBC/PKCS5Padding";
+							String concat= keyPrivate.getFormat()+"/CBC/PKCS5Padding";
 							Cipher cipher_private = Cipher.getInstance(concat); 
-							cipher_private.init(Cipher.ENCRYPT_MODE, key_private);
+							cipher_private.init(Cipher.ENCRYPT_MODE, keyPrivate);
 							byte [] file_encriptado2=cipher_private.doFinal(desencriptado);
 							filedef.write(file_encriptado2);
 							filedef.close();
