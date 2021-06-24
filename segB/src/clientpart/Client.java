@@ -76,7 +76,7 @@ public class Client {
 					System.exit(0);
 				}
 
-
+				//La clave que aqui se introduce es la de las claves, no la del keystore, en este caso es la misma
 				Util.startClientWorking(conexion(),name,confidencialidad,ubicacion,passwd_key);
 
 				control =1;
@@ -108,7 +108,7 @@ public class Client {
 				String idRegistro= reader.readLine();
 				System.out.println("Introduzca el CertAuth");
 				String cert_rec= reader.readLine();
-				System.out.println("Introduzca a contrase�a del keyStore");
+				System.out.println("Introduzca a contraseña del keyStore");
 				String passwd_key3=reader.readLine();
 				try {
 					System.out.println("INICIANDO ALMACENES");
@@ -120,10 +120,6 @@ public class Client {
 				}
 
 				Util3.start(conexion(),idRegistro,cert_rec);
-
-
-
-
 
 				control=1;
 				break;

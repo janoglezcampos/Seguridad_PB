@@ -31,91 +31,63 @@ import javax.net.ssl.SSLSocket;
 
 public class Util2 {
 
+	private static String authAlias="clientAuth";
 	public static void start(final Socket client2, String confidencialidad2, String cert_listar) {
 		// TODO Auto-generated method stub
-		
-		
-		 System.out.println("client start SEND ");
-	      new Thread() {
-	         public void run() {
-	        	 
-	        	 
-	        	try { 
-	        	 
-	             String op = "2"; 
-	        	 DataOutputStream out;
-			
+
+		System.out.println("client start SEND ");
+		new Thread() {
+			public void run() {
+				try { 
+					String op = "2"; 
+					DataOutputStream out;
+
 					out = new DataOutputStream(client2.getOutputStream());
 					out.writeInt(op.getBytes().length);
-		            out.write(op.getBytes());
-		            out.flush();
-		            
-		            File data = new File(cert_listar);
-		            byte [] certFirma= Files.readAllBytes(data.toPath());
- 
-		            InputStream in = new ByteArrayInputStream(certFirma);
-		    		CertificateFactory cf   = CertificateFactory.getInstance("X.509");
-		    		Certificate certificate = cf.generateCertificate(in);
+					out.write(op.getBytes());
+					out.flush();
 					
-	     			X509Certificate extra= (X509Certificate) certificate ;
-	     			Principal idPropietario = extra.getIssuerDN();
-	     			//System.out.println("ID PROPIETARIO: "+ idPropietario.toString());
-	     			
-	     	
-	     		out.writeInt(idPropietario.toString().getBytes().length);
-	            out.write(idPropietario.toString().getBytes());
-	            out.flush();
-	            out.writeInt(confidencialidad2.getBytes().length);
-	            out.write(confidencialidad2.getBytes());
-	            out.flush();
-	        
-	            BufferedReader input = new BufferedReader(new InputStreamReader(client2.getInputStream()));
-	            String received = input.readLine();
-	            System.out.println("ID PROPIETARIO : "+"\n" + received);
-	            received = input.readLine();
-	            System.out.println("ID REGISTRO : "+"\n" + received);
-	            received = input.readLine();
-	            System.out.println("SELLO TEMPORAL : "+"\n" + received);
-	            received = input.readLine();
-	            System.out.println("NOMBRE DEL DOCUMENTO: "+"\n" + received);
-	            
-	            
-	            input.close();
-	     		
-	        	 
-	        	} catch (IOException | CertificateException e) {
-	     			// TODO Auto-generated catch block
-	     			e.printStackTrace();
-	     		}
-	     		
-	        	 
-	        	 
-	        	 
-	        	 
-	        	 
-	        	 
-	        	 
-	        	 
-	        	 
-	        	 
-	       
-	        
-	            
-	            	  
-	            	  
-	            	   
-			
-			
-	            }
-	            }.start();
-		
-		
-		
-		
-		
-		
-		
-		
+					Certificate certificate = Client.getKeyStore().getCertificate(authAlias);
+					byte [] certFirma= certificate.getEncoded();
+
+					X509Certificate extra= (X509Certificate) certificate ;
+					Principal idPropietario = extra.getIssuerDN();
+					//System.out.println("ID PROPIETARIO: "+ idPropietario.toString());
+
+					out.writeInt(idPropietario.toString().getBytes().length);
+					out.write(idPropietario.toString().getBytes());
+					out.flush();
+					out.writeInt(confidencialidad2.getBytes().length);
+					out.write(confidencialidad2.getBytes());
+					out.flush();
+
+					BufferedReader input = new BufferedReader(new InputStreamReader(client2.getInputStream()));
+					String received = input.readLine();
+					System.out.println("ID PROPIETARIO : "+"\n" + received);
+					received = input.readLine();
+					System.out.println("ID REGISTRO : "+"\n" + received);
+					received = input.readLine();
+					System.out.println("SELLO TEMPORAL : "+"\n" + received);
+					received = input.readLine();
+					System.out.println("NOMBRE DEL DOCUMENTO: "+"\n" + received);
+
+					input.close();
+					out.close();
+
+				} catch (IOException | CertificateException | KeyStoreException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}.start();
+
+
+
+
+
+
+
+
 	}
 
 }
