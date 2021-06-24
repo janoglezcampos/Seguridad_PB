@@ -5,6 +5,7 @@ import java.net.*;
 import java.security.*;
 import java.security.cert.*;
 
+import javax.crypto.Cipher;
 import javax.net.ssl.*;
 
 
@@ -14,11 +15,30 @@ public class Server {
 	private static TrustManager[] trustManagers;
 	private static KeyManager[] keyManagers ;
 	private static KeyStore trust;
-	private static  KeyStore key;
+	private static KeyStore key;
 	private static int contador=0;
 	private static boolean ocspEnable = false;
 	private static String serverAuthCert = "serverauth";
-
+	
+	private static PublicKey clientPublicKey;
+	private static AlgorithmParameters localCipherParams; 
+	
+	public static void setLocalCipherParams(AlgorithmParameters params) {
+		localCipherParams = params;
+	}
+	
+	public static AlgorithmParameters getLocalCipherParams() {
+		return localCipherParams;
+	}
+	
+	public static void setClientPublicKey(PublicKey publicKey) {
+		clientPublicKey = publicKey;
+	}
+	
+	public static PublicKey getClientPublicKey() {
+		return clientPublicKey;
+	}
+	
 	public static int getContador() {
 		return contador;
 	}
@@ -85,7 +105,7 @@ public class Server {
 			}
 			//Recuperar documentos
 			else if (operacion.equals("3")) {
-				Util3.start(aClient, password);
+				Util3.start(aClient, chipherAlgoritm, password);
 
 			}
 			else {

@@ -1,32 +1,22 @@
 package server;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.nio.file.*;
+import java.security.AlgorithmParameters;
 import java.security.Key;
-import java.security.Principal;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.security.KeyStore.PasswordProtection;
+import java.security.KeyStore.SecretKeyEntry;
+import java.security.cert.*;
 import java.util.ArrayList;
-import java.util.Enumeration;
-
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 
 
 public class Util3 {
 	private static String savePath="/Users/lexy/Desktop/Clases/Seguridad/serverSavedFiles/";
+	private static String secretKeyAlias = "dataenckey";
 
-	public static void start(Socket aClient, String passwd_key) {
+	public static void start(Socket aClient, String algorithm, String passwd_key) {
 		new Thread() {
 			public void run() {
 				try {
@@ -41,8 +31,7 @@ public class Util3 {
 					String idPropietario = ((X509Certificate)certificate).getIssuerDN().toString();
 
 					PrintWriter output = new PrintWriter(aClient.getOutputStream());
-
-					String id_carpeta=id_registro+"_"+idPropietario;     
+   
 					File directorio= new File (savePath);
 					String carpeta_comprobar = "";
 					boolean esprivado=false;
@@ -83,8 +72,9 @@ public class Util3 {
 								out.write(req.get(4));
 								out.writeInt(req.get(0).length);
 								out.write(req.get(0));
-								out.writeInt(req.get(5).length);
-								out.write(req.get(5));
+								byte [] decriptedFile = decriptDocument(req.get(5), secretKeyAlias, passwd_key, algorithm);
+								out.writeInt(decriptedFile.length);
+								out.write(decriptedFile);
 								out.flush();
 
 							} else {
@@ -169,7 +159,6 @@ public class Util3 {
 		ArrayList<byte[]> req = new ArrayList <byte[]>();
 		String ruta= savePath+carpeta_comprobar;
 		File directorio2= new File (ruta);
-		System.out.println("Ruta: "+ ruta);
 		String [] names2= {"confidencialidad","firmaDocumento","idRegistro","selloTemporal","firmaSigRD"};
 		File [] contenido =directorio2.listFiles();
 
@@ -177,8 +166,6 @@ public class Util3 {
 		
 		for(int i=0; i<names2.length; i++) {
 			byte [] file =Files.readAllBytes(Paths.get(ruta,names2[i]));
-			System.out.println("Enviando: "+ Paths.get(ruta,names2[i]).toString());
-			System.out.println(file.toString());
 			req.add(file);
 		}
 		
@@ -200,5 +187,21 @@ public class Util3 {
 			}
 		}
 		return req;
+	}
+	
+	public static byte[] decriptDocument(byte[] document, String keyAlias, String password, String algorithm) throws Exception {
+		PasswordProtection pass = new PasswordProtection(password.toCharArray());
+		
+		SecretKeyEntry secretKeyEntry = (SecretKeyEntry) Server.getKeyStore().getEntry(keyAlias, pass);
+		SecretKey keyPrivate = secretKeyEntry.getSecretKey();
+		
+		String concat= algorithm+"/CBC/PKCS5Padding";
+		Cipher cipher_private = Cipher.getInstance(concat);
+		
+		AlgorithmParameters params= AlgorithmParameters.getInstance(algorithm, "SunJCE");
+		params.init(Server.getLocalCipherParams().getEncoded());
+		
+		cipher_private.init(Cipher.DECRYPT_MODE, keyPrivate,params);
+		return cipher_private.doFinal(document);
 	}
 }
