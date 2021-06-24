@@ -10,8 +10,11 @@ Certificados
 
 Funcionalidad 1:
 * Generar respuestas serverside (server)
-* Almacenar clave pública del cliente (CertCifrado_c) para posterior cifrado (server)
+* Almacenar clave pública del cliente (CertCifrado_c) para posterior cifrado (server) - DONE
 * Almacenar todo en un fichero, no en un directorio (server)
+* Verificar firma al recibir ok (cliente)
+* Eliminar archivo enviado (cliente)
+* Guardar hash archivo enviado y asociarlo al idRegistro (cliente)
 
 Funcionalidad 2:
 * Generar respuestas serverside (server)
@@ -27,6 +30,9 @@ Funcionalidad 3:
 * Desecriptar con PGP (cliente)
 * Enviar nombre del archivo (server)
 * Guardar con nombre del archivo (cliente)
+* Verificar certificado de firma_s (cliente)
+* Comprobar que sigRD es válida (cliente)
+* Computar hash y comparar con el almacenado en Funcionalidad 1 (cliente)
 
 Opcional:
 * Crear una base de datos, aunque sea txt, y no depender de las listas (para permitir cerrar y reabrir cliente).
