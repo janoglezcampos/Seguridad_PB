@@ -22,7 +22,7 @@ Funcionalidad 2:
 
 Funcionalidad 3:
 * Generar respuestas serverside (server)
-* Desecriptar archivo con clave secreta simetrica (server)
+* Desecriptar archivo con clave secreta simetrica (server) - DONE
 * Encriptar con PGP (server)
 * Desecriptar con PGP (cliente)
 * Enviar nombre del archivo (server)
