@@ -31,7 +31,7 @@ import java.util.LinkedList;
 
 public class FileSave {
 	
-	public static String sigRD (byte [] certFirma, byte[] file, byte[] firmaDoc,char[] clave,String confidencialidad) throws CertificateException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException{
+	public static String sigRD (byte [] certFirma, byte[] file, byte[] firmaDoc,char[] clave,String confidencialidad,String savePath, String keySignAlias) throws CertificateException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException{
 		
 		//SACAMOS IDPROPIETARIO
 		InputStream in = new ByteArrayInputStream(certFirma);
@@ -42,41 +42,39 @@ public class FileSave {
 		System.out.println(extra.getSubjectDN().toString());
 		System.out.println("ID PROPIETARIO: "+ idPropietario.toString());
 		
-		// PASAMOS A GENERERAR LA FIRMA DE TODO 
+		// PASAMOS A GENERERAR LA FIRMA
 		int idRegistro= Server.getContador();
-		Server.setContador(idRegistro+1);
+		Server.incremetarContador();
 	
 		String sello= sello();
-		byte  F= (byte) idRegistro; //recordar para pasar e imprimir hacer &0xff
+		//byte  F= (byte) idRegistro; //recordar para pasar e imprimir hacer &0xff
 		
 	    ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
-	    outputStream.write( F );
-	    outputStream.write( sello.getBytes());
+	    outputStream.write(idRegistro);
+	    outputStream.write(sello.getBytes());
 	    outputStream.write(idPropietario.toString().getBytes());
-	    outputStream.write( file);
-	    outputStream.write( firmaDoc);
+	    outputStream.write(file);
+	    outputStream.write(firmaDoc);
 
-	    byte conjunto[] = outputStream.toByteArray( );
+	    byte conjunto[] = outputStream.toByteArray();
 		
-		
-		String name3="firmas";
-		PrivateKey clavekey = (PrivateKey) Server.getKeyStore().getKey(name3, clave);// ponia clientkey
+		PrivateKey clavekey = (PrivateKey) Server.getKeyStore().getKey(keySignAlias, clave);
 		Signature firma =Signature.getInstance("MD5withRSA");
 		firma.initSign(clavekey);
-		firma.update(conjunto);     /// aqui
+		firma.update(conjunto); 
 		byte[] bytesfirma= firma.sign();
 		
 		String nombreFichero= Integer.toString(idRegistro)+"_"+idPropietario.toString();
 		 
-		guardado (firmaDoc,idRegistro,sello,bytesfirma,nombreFichero, confidencialidad);
+		guardado (firmaDoc,idRegistro,sello,bytesfirma,nombreFichero, confidencialidad,savePath);
 		
 		return nombreFichero;
 	}
 
 
-	public static void guardado (byte[] firmaDoc, int idRegistro, String sello, byte[] bytesfirma, String nombreFichero,String confidencialidad) throws IOException {
+	public static void guardado (byte[] firmaDoc, int idRegistro, String sello, byte[] bytesfirma, String nombreFichero,String confidencialidad,String savePath) throws IOException {
 		
-		 String ruta_save="C:\\Users\\usuario\\Desktop\\alamcenes/"+nombreFichero;
+		 String ruta_save=savePath+nombreFichero;
 		 File directorio = new File(ruta_save);
 		 if (!directorio.exists()) {
 	            if (directorio.mkdirs()) {
@@ -126,7 +124,7 @@ public class FileSave {
 
         //System.out.printf("Hora Actual: %02d:%02d:%02d %n", hora, minuto, segundo);
         
-        String def= anho+"/"+mes+"/"+dia+"/"+" "+hora+":"+minuto+":"+segundo;
+        String def= anho+"/"+mes+"/"+dia+" "+hora+":"+minuto+":"+segundo;
         System.out.println(def);
         return def;
 	}
