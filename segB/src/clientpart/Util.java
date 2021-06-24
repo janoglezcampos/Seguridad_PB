@@ -66,13 +66,13 @@ public class Util {
 				out.flush();
 				System.out.println("FILE ENCRIPTADO sent");
 
-				System.out.println("Enviamos parametros de tama�o:  "+ full.get(0).length);
+				System.out.println("Enviamos parametros de tamaño:  "+ full.get(0).length);
 				out.writeInt(full.get(0).length);
 				out.write(full.get(0));
 				out.flush();
 				System.out.println("PARAMETROS sent");
 
-				System.out.println("Enviamos clave encriptado de tama�o:  "+ full.get(2).length);
+				System.out.println("Enviamos clave encriptado de tamaño:  "+ full.get(2).length);
 				out.writeInt(full.get(2).length);
 				out.write(full.get(2));
 				out.flush();
@@ -199,8 +199,6 @@ public class Util {
 
 		}
 		//FIRMAMOS EL FICHERO ENCRIPTADO
-
-
 		PrivateKey clavekey = (PrivateKey) Client.getKeyStore().getKey(signAlias, clave);// tendria que ser asi con otra pareja de claves ??
 		Signature firma =Signature.getInstance("MD5withRSA");
 		firma.initSign(clavekey);
