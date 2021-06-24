@@ -3,7 +3,7 @@ package server;
 import java.io.*;
 import java.net.*;
 import java.security.*;
-import java.security.cert.CertificateException;
+import java.security.cert.*;
 
 import javax.net.ssl.*;
 
@@ -16,7 +16,8 @@ public class Server {
 	private static KeyStore trust;
 	private static  KeyStore key;
 	private static int contador=0;
-	private static boolean ocspStaplingEnabled = false;
+	private static boolean ocspEnable = false;
+	private static String serverAuthCert = "server (ca_cert)";
 
 	public static int getContador() {
 		return contador;
@@ -51,11 +52,14 @@ public class Server {
 
 
 		SSLContext sc = SSLContext.getInstance("TLS");
-		sc.init(keyManagers, trustManagers, null);
+		final X509KeyManager origKm = (X509KeyManager)keyManagers[0];
+		X509KeyManager km = new CustomKeyManager(serverAuthCert, origKm);
+		sc.init(new KeyManager[] { km }, trustManagers, null);
 
 		SSLServerSocketFactory ssf = sc.getServerSocketFactory();
 		ServerSocket serverSocket1 = ssf.createServerSocket(port);
 		((SSLServerSocket)serverSocket1).setNeedClientAuth(true);
+		System.out.println("Esperando conexión... (OCSP habilitado: "+ System.getProperty("jdk.tls.server.enableStatusRequestExtension") +")");
 
 		while (true) {			
 			Socket aClient = serverSocket1.accept();
@@ -92,10 +96,7 @@ public class Server {
 	}
 
 	public static void store(String keyStorePath, String trustStorePath, String passKeystore) throws NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException, KeyStoreException {
-
-		if(ocspStaplingEnabled) {
-			System.setProperty("jdk.tls.server.enableStatusRequestExtension", "true");
-		}
+		System.setProperty("jdk.tls.server.enableStatusRequestExtension", String.valueOf(ocspEnable));
 		
 		KeyStore keyStore;
 
@@ -122,9 +123,11 @@ public class Server {
 		//String name ="certauth";
 		//System.out.println("CLAVE DEL KEY: "+ key.getKey(name,clave));
 
-		KeyManagerFactory kmf = KeyManagerFactory.getInstance("PKIX");
+		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		//kmf.init(keyStore, "serverpass".toCharArray());
 		kmf.init(keyStore, clave);
+		
+		
 		keyManagers = kmf.getKeyManagers();
 
 		KeyStore trustedStore = KeyStore.getInstance("JCEKS");
@@ -139,7 +142,7 @@ public class Server {
 		//System.out.println("CLAVE DEL TRUST: "+ trust.getCertificate(name2).getPublicKey());
 
 
-		TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
+		TrustManagerFactory tmf = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		tmf.init(trustedStore);
 
 		trustManagers = tmf.getTrustManagers();
@@ -166,7 +169,48 @@ public class Server {
 		return key;
 	}
 
+	//Modificando chooseServerAlias podemos definir SIEMPRE que certificado enviamos, así podemos asegurar que la comprobación ocsp se hace
+	//sobre el certificado que queremos
+	static class CustomKeyManager implements X509KeyManager{
+		
+		private String certAlias;
+		private X509KeyManager originalKm;
+		
+		public CustomKeyManager(String alias, X509KeyManager km) {
+			this.certAlias = alias;
+			this.originalKm = km;
+		}
+		
+		@Override
+		public String[] getClientAliases(String keyType, Principal[] issuers) {
+			return originalKm.getClientAliases(keyType, issuers);
+		}
 
+		@Override
+		public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket) {
+			return originalKm.chooseClientAlias(keyType, issuers, socket);
+		}
 
+		@Override
+		public String[] getServerAliases(String keyType, Principal[] issuers) {
+			return originalKm.getServerAliases(keyType, issuers);
+		}
+
+		@Override
+		public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
+			return certAlias;
+		}
+
+		@Override
+		public X509Certificate[] getCertificateChain(String alias) {
+			return originalKm.getCertificateChain(alias);
+		}
+
+		@Override
+		public PrivateKey getPrivateKey(String alias) {
+			return originalKm.getPrivateKey(alias);
+		}
+		
+	}
 
 }
