@@ -17,14 +17,14 @@ public class Server {
 	private static  KeyStore key;
 	private static int contador=0;
 	private static boolean ocspEnable = false;
-	private static String serverAuthCert = "server (ca_cert)";
+	private static String serverAuthCert = "serverauth";
 
 	public static int getContador() {
 		return contador;
 	}
 
-	public static void setContador(int contadorArg) {
-		contador = contadorArg;
+	public static void incremetarContador() {
+		contador = contador+1;
 	}
 
 	public  static void main(String[] args) {
