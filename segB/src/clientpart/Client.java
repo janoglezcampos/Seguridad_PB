@@ -1,28 +1,12 @@
 package clientpart;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.*;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
-import java.security.UnrecoverableKeyException;
+import java.security.*;
 import java.security.cert.*;
 import java.util.*;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import javax.net.ssl.*;
 
 
@@ -33,12 +17,12 @@ public class Client {
 	private static KeyManager[] keyManagers ;
 	private static KeyStore trust;
 	private static KeyStore key;
-	private static String ocspURI = "http://127.0.0.1:9999";
+	private static String ocspURI = "http://127.0.0.1:9997";
 	private static boolean ocspStaplingEnable = false;
 	private static boolean ocspClientEnable = true;
 
 	public static void main(String[] args)throws IOException, KeyManagementException, UnrecoverableKeyException, KeyStoreException, SignatureException {
-
+		System.out.println(System.getProperty("java.version"));
 
 		try {
 
@@ -209,7 +193,7 @@ public class Client {
 		System.out.println ("\n*************************************************************");	    
 		System.out.println ("  Comienzo SSL Handshake -- Cliente y Server Autenticados");
 		System.out.println ("*************************************************************");	    
-
+		System.out.println (Security.getProperty("ocsp.enable"));
 		client.startHandshake();
 
 
@@ -223,6 +207,17 @@ public class Client {
 
 	public static void store(String[] args, String passwd_key) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException {
 
+		if(ocspClientEnable) {
+			System.setProperty("com.sun.net.ssl.checkRevocation",        "true");
+			Security.setProperty("ocsp.enable",                            "true");
+		}
+		
+		if(ocspStaplingEnable) {
+			Security.setProperty("ocsp.enable", "false");
+			System.setProperty("com.sun.net.ssl.checkRevocation", 		"true");
+			System.setProperty("jdk.tls.client.enableStatusRequestExtension", "true");
+		}
+		
 		KeyStore keyStore = KeyStore.getInstance("JCEKS");
 		//System.out.println(passwd_key);
 		keyStore.load(new FileInputStream(args[0]),passwd_key.toCharArray());
@@ -241,7 +236,7 @@ public class Client {
 		//char[] clave = password.toCharArray();
 		//System.out.println("CLAVE DEL KEY: "+ key.getKey(name,clave));
 
-		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+		KeyManagerFactory kmf = KeyManagerFactory.getInstance("PKIX");
 		//System.out.println("prube "+KeyManagerFactory.getDefaultAlgorithm());
 		kmf.init(keyStore, passwd_key.toCharArray());
 
@@ -254,23 +249,22 @@ public class Client {
 		trust=trustedStore;
 		System.out.println("Tamaño del trust  "+trust.size());
 
-		//String name2= "auth";
-		//System.out.println("CLAVE DEL KEY: "+ trust.getCertificate(name2).getPublicKey());
+		TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
 		
-
-		TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-		
-		if(ocspClientEnable) {
+		if(ocspClientEnable || ocspStaplingEnable) {
 			try {
 				CertPathBuilder certBuilder = CertPathBuilder.getInstance("PKIX");
 				PKIXRevocationChecker revocationChecker = (PKIXRevocationChecker) certBuilder.getRevocationChecker();
 				revocationChecker.setOptions(EnumSet.of(PKIXRevocationChecker.Option.NO_FALLBACK));
-				revocationChecker.setOcspResponder(new URI(ocspURI));
+				//Los certificados incluyen el url
+				//revocationChecker.setOcspResponder(new URI(ocspURI));
 				
 				PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(trustedStore, new X509CertSelector());
 				pkixParams.addCertPathChecker(revocationChecker);
 				pkixParams.setRevocationEnabled(true);
-				tmf.init(new CertPathTrustManagerParameters(pkixParams));
+				ManagerFactoryParameters mfp =
+		                new CertPathTrustManagerParameters(pkixParams);
+				tmf.init(mfp);
 			}catch(Exception e) {
 				System.out.println("Exception on OCSP setup:" + e);
 				System.exit(0);
@@ -291,14 +285,6 @@ public class Client {
 		System.setProperty("javax.net.ssl.trustStoreType",     "JCEKS");
 		System.setProperty("javax.net.ssl.trustStorePassword", passwd_key);
 		
-		if(ocspStaplingEnable || ocspClientEnable) {
-			System.setProperty("com.sun.net.ssl.checkRevocation",        "true");
-			System.setProperty("ocsp.enable",                            "true");
-		}
-		
-		if(ocspStaplingEnable) {
-			System.setProperty("jdk.tls.client.enableStatusRequestExtension",        "true");
-		}
 
 	}
 

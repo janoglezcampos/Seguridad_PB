@@ -1,18 +1,9 @@
 package server;
 
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
+import java.io.*;
+import java.net.*;
+import java.security.*;
 import java.security.cert.CertificateException;
-import java.util.Enumeration;
 
 import javax.net.ssl.*;
 
@@ -26,7 +17,6 @@ public class Server {
 	private static  KeyStore key;
 	private static int contador=0;
 	private static boolean ocspStaplingEnabled = false;
-	private static String ocspURI="http://127.0.0.1:9999";
 
 	public static int getContador() {
 		return contador;
@@ -37,7 +27,7 @@ public class Server {
 	}
 
 	public  static void main(String[] args) {
-
+		System.out.println(System.getProperty("java.version"));
 		try {
 			if (args.length!=4){
 				System.out.println("Número de parametros incorrecto, introduzca keyStore, trustStore, contraseñaKeyStore y algoritmoCifrado");
@@ -103,6 +93,10 @@ public class Server {
 
 	public static void store(String keyStorePath, String trustStorePath, String passKeystore) throws NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException, KeyStoreException {
 
+		if(ocspStaplingEnabled) {
+			System.setProperty("jdk.tls.server.enableStatusRequestExtension", "true");
+		}
+		
 		KeyStore keyStore;
 
 		keyStore = KeyStore.getInstance("JCEKS");
@@ -128,7 +122,7 @@ public class Server {
 		//String name ="certauth";
 		//System.out.println("CLAVE DEL KEY: "+ key.getKey(name,clave));
 
-		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+		KeyManagerFactory kmf = KeyManagerFactory.getInstance("PKIX");
 		//kmf.init(keyStore, "serverpass".toCharArray());
 		kmf.init(keyStore, clave);
 		keyManagers = kmf.getKeyManagers();
@@ -145,7 +139,7 @@ public class Server {
 		//System.out.println("CLAVE DEL TRUST: "+ trust.getCertificate(name2).getPublicKey());
 
 
-		TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+		TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
 		tmf.init(trustedStore);
 
 		trustManagers = tmf.getTrustManagers();
@@ -163,10 +157,6 @@ public class Server {
 		System.setProperty("javax.net.ssl.trustStoreType",     "JCEKS");
 		System.setProperty("javax.net.ssl.trustStorePassword", passKeystore);
 		
-		if(ocspStaplingEnabled) {
-			System.setProperty("jdk.tls.client.enableStatusRequestExtension", "true");
-			System.setProperty("jdk.tls.stapling.responderURI", ocspURI);
-		}
 	}
 	public static KeyStore getTrust () {
 		return trust;
