@@ -27,140 +27,131 @@ import java.util.Enumeration;
 
 public class Util {
 
-	public Util() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
 	//public static SecretKey  keydef ;
 	//public static byte [] encript;
+	public static String signAlias= "clientsign";
+	public static String serverCipherAlias= "servercipher";
+	public static String clientCipherAlias= "clientcipher";
 	public static ArrayList<byte[]> full= new ArrayList<byte[]> ();
 
 	public static void startClientWorking(final Socket clientSock, String name, String confidencialidad, String ubicacion,String passwd_key){
 		System.out.println("Client start SEND ");
-		new Thread() {
-			public void run() {
-				try {
-					DataOutputStream out = new DataOutputStream(clientSock.getOutputStream());
-					String op = "1";
-					out.writeInt(op.getBytes().length);
-					out.write(op.getBytes());
-					out.flush();
+		try {
+			DataOutputStream out = new DataOutputStream(clientSock.getOutputStream());
+			String op = "1";
+			out.writeInt(op.getBytes().length);
+			out.write(op.getBytes());
+			out.flush();
 
-					try {
-						//Util.registrar("name", "confidencialidad", "C:\\Users\\usuario\\Desktop\\alamcenes/prueba.PNG");
-						Util.registrar(passwd_key, ubicacion,confidencialidad);
-					} catch (InvalidKeyException | UnrecoverableKeyException | NoSuchAlgorithmException
-							| NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | KeyStoreException
-							| SignatureException e) {
-						e.printStackTrace();
-					}
-
-					if (confidencialidad.equals("PRIVADO")) {
-
-						System.out.println("Enviamos Tipo de confidencialidad:  "+ confidencialidad);
-						out.writeInt(confidencialidad.getBytes().length);
-						out.write(confidencialidad.getBytes());
-						out.flush();
-						System.out.println("CONFIDENCIALIDAD sent");
-
-						System.out.println("Enviamos file encriptado de tamaño:  "+ full.get(1).length);
-						out.writeInt(full.get(1).length);
-						out.write(full.get(1));
-						out.flush();
-						System.out.println("FILE ENCRIPTADO sent");
-
-						System.out.println("Enviamos parametros de tama�o:  "+ full.get(0).length);
-						out.writeInt(full.get(0).length);
-						out.write(full.get(0));
-						out.flush();
-						System.out.println("PARAMETROS sent");
-
-						System.out.println("Enviamos clave encriptado de tama�o:  "+ full.get(2).length);
-						out.writeInt(full.get(2).length);
-						out.write(full.get(2));
-						out.flush();
-						System.out.println("CLAVE ENCRIPTADA sent");
-
-						System.out.println("Enviamos FIRMA:  "+ full.get(3).length);
-						out.writeInt(full.get(3).length);
-						out.write(full.get(3));
-						out.flush();
-						System.out.println("FIRMA sent");
-
-						System.out.println("Enviamos Nombre de documento:  "+ name);
-						out.writeInt(name.getBytes().length);
-						out.write(name.getBytes());
-						out.flush();
-						System.out.println("NOMBRE sent " +name.getBytes().length);
-
-						System.out.println("Enviamos CERTFIRMA:  "+ full.get(4).length);
-						out.writeInt(full.get(4).length);
-						out.write(full.get(4));
-						out.flush();
-						System.out.println("CERTFIRMA sent");
-
-						System.out.println("Enviamos CERTCIFRADO:  "+ full.get(5).length);
-						out.writeInt(full.get(5).length);
-						out.write(full.get(5));
-						out.flush();
-						System.out.println("CERTCIFRADO sent");  
-
-					}
-					else {
-
-						System.out.println("Enviamos Tipo de confidencialidad:  "+ confidencialidad);
-						out.writeInt(confidencialidad.getBytes().length);
-						out.write(confidencialidad.getBytes());
-						out.flush();
-						System.out.println("CONFIDENCIALIDAD sent");
-
-						System.out.println("Enviamos file de tamaño:  "+ full.get(0).length);
-						out.writeInt(full.get(0).length);
-						out.write(full.get(0));
-						out.flush();
-						System.out.println("FILE sent");
-
-						System.out.println("Enviamos FIRMA:  "+ full.get(1).length);
-						out.writeInt(full.get(1).length);
-						out.write(full.get(1));
-						out.flush();
-						System.out.println("FIRMA sent");
-
-						System.out.println("Enviamos Nombre de documento:  "+ name);
-						out.writeInt(name.getBytes().length);
-						out.write(name.getBytes());
-						out.flush();
-						System.out.println("NOMBRE sent " +name.getBytes().length);
-
-						System.out.println("Enviamos CERTFIRMA:  "+ full.get(2).length);
-						out.writeInt(full.get(2).length);
-						out.write(full.get(2));
-						out.flush();
-						System.out.println("CERTFIRMA sent");  
-
-
-						System.out.println("Enviamos CERTCIFRADO:  "+ full.get(3).length);
-						out.writeInt(full.get(3).length);
-						out.write(full.get(3));
-						out.flush();
-						System.out.println("CERTCIFRADO sent");  
-
-
-					}
-
-					BufferedReader input = new BufferedReader(new InputStreamReader(
-							clientSock.getInputStream()));
-					String received = input.readLine();
-					System.out.println("Received : " + received);
-					clientSock.close();
-
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			try {
+				//Util.registrar("name", "confidencialidad", "C:\\Users\\usuario\\Desktop\\alamcenes/prueba.PNG");
+				Util.registrar(passwd_key, ubicacion,confidencialidad);
+			} catch (InvalidKeyException | UnrecoverableKeyException | NoSuchAlgorithmException
+					| NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | KeyStoreException
+					| SignatureException e) {
+				e.printStackTrace();
 			}
-		}.start();
+
+			if (confidencialidad.equals("PRIVADO")) {
+
+				System.out.println("Enviamos Tipo de confidencialidad:  "+ confidencialidad);
+				out.writeInt(confidencialidad.getBytes().length);
+				out.write(confidencialidad.getBytes());
+				out.flush();
+				System.out.println("CONFIDENCIALIDAD sent");
+
+				System.out.println("Enviamos file encriptado de tamaño:  "+ full.get(1).length);
+				out.writeInt(full.get(1).length);
+				out.write(full.get(1));
+				out.flush();
+				System.out.println("FILE ENCRIPTADO sent");
+
+				System.out.println("Enviamos parametros de tama�o:  "+ full.get(0).length);
+				out.writeInt(full.get(0).length);
+				out.write(full.get(0));
+				out.flush();
+				System.out.println("PARAMETROS sent");
+
+				System.out.println("Enviamos clave encriptado de tama�o:  "+ full.get(2).length);
+				out.writeInt(full.get(2).length);
+				out.write(full.get(2));
+				out.flush();
+				System.out.println("CLAVE ENCRIPTADA sent");
+
+				System.out.println("Enviamos FIRMA:  "+ full.get(3).length);
+				out.writeInt(full.get(3).length);
+				out.write(full.get(3));
+				out.flush();
+				System.out.println("FIRMA sent");
+
+				System.out.println("Enviamos Nombre de documento:  "+ name);
+				out.writeInt(name.getBytes().length);
+				out.write(name.getBytes());
+				out.flush();
+				System.out.println("NOMBRE sent " +name.getBytes().length);
+
+				System.out.println("Enviamos CERTFIRMA:  "+ full.get(4).length);
+				out.writeInt(full.get(4).length);
+				out.write(full.get(4));
+				out.flush();
+				System.out.println("CERTFIRMA sent");
+
+				System.out.println("Enviamos CERTCIFRADO:  "+ full.get(5).length);
+				out.writeInt(full.get(5).length);
+				out.write(full.get(5));
+				out.flush();
+				System.out.println("CERTCIFRADO sent");  
+			}
+			else {
+				System.out.println("Enviamos Tipo de confidencialidad:  "+ confidencialidad);
+				out.writeInt(confidencialidad.getBytes().length);
+				out.write(confidencialidad.getBytes());
+				out.flush();
+				System.out.println("CONFIDENCIALIDAD sent");
+
+				System.out.println("Enviamos file de tamaño:  "+ full.get(0).length);
+				out.writeInt(full.get(0).length);
+				out.write(full.get(0));
+				out.flush();
+				System.out.println("FILE sent");
+
+				System.out.println("Enviamos FIRMA:  "+ full.get(1).length);
+				out.writeInt(full.get(1).length);
+				out.write(full.get(1));
+				out.flush();
+				System.out.println("FIRMA sent");
+
+				System.out.println("Enviamos Nombre de documento:  "+ name);
+				out.writeInt(name.getBytes().length);
+				out.write(name.getBytes());
+				out.flush();
+				System.out.println("NOMBRE sent " +name.getBytes().length);
+
+				System.out.println("Enviamos CERTFIRMA:  "+ full.get(2).length);
+				out.writeInt(full.get(2).length);
+				out.write(full.get(2));
+				out.flush();
+				System.out.println("CERTFIRMA sent");  
+
+
+				System.out.println("Enviamos CERTCIFRADO:  "+ full.get(3).length);
+				out.writeInt(full.get(3).length);
+				out.write(full.get(3));
+				out.flush();
+				System.out.println("CERTCIFRADO sent");  
+
+
+			}
+
+			BufferedReader input = new BufferedReader(new InputStreamReader(clientSock.getInputStream()));
+			String received = input.readLine();
+			System.out.println("Received : " + received);
+			clientSock.close();
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 
@@ -168,7 +159,6 @@ public class Util {
 
 		char[] clave = passwd_key.toCharArray();
 		File data = new File(ubicacion);
-		String name2="certcifrado";
 
 		if (confidencialidad.equals("PRIVADO")) {
 			//Generamos clave AES 128
@@ -190,7 +180,7 @@ public class Util {
 
 			//OBTENEMOS CLAVE DEL TRUST 
 
-			Key clavetrust = Client.getTrust().getCertificate(name2).getPublicKey();
+			PublicKey clavetrust = Client.getTrust().getCertificate(serverCipherAlias).getPublicKey();
 
 			//Ciframos la clave con la que se cifro el fichero
 			cipher=Cipher.getInstance("RSA/ECB/PKCS1Padding");
@@ -211,10 +201,7 @@ public class Util {
 		//FIRMAMOS EL FICHERO ENCRIPTADO
 
 
-		String name3="firmac";
-		String name4="certfirma";
-
-		PrivateKey clavekey = (PrivateKey) Client.getKeyStore().getKey(name3, clave);// tendria que ser asi con otra pareja de claves ??
+		PrivateKey clavekey = (PrivateKey) Client.getKeyStore().getKey(signAlias, clave);// tendria que ser asi con otra pareja de claves ??
 		Signature firma =Signature.getInstance("MD5withRSA");
 		firma.initSign(clavekey);
 		firma.update(Files.readAllBytes(data.toPath()));
@@ -223,7 +210,7 @@ public class Util {
 		full.add(bytesfirma);
 
 		//OBTENEMOS EL CERTFIRMA
-		Certificate certiFirma = Client.getKeyStore().getCertificate(name4); 
+		Certificate certiFirma = Client.getKeyStore().getCertificate(signAlias); 
 		try {
 			byte [] certibyte = certiFirma.getEncoded();
 			full.add(certibyte);
@@ -234,7 +221,7 @@ public class Util {
 		}
 
 		//OBTENEMOS CERTIFICADO DE CIFRADO 
-		Certificate certiCifrado = Client.getKeyStore().getCertificate(name2);
+		Certificate certiCifrado = Client.getKeyStore().getCertificate(clientCipherAlias);
 		try {
 			byte [] certibyte2 = certiCifrado.getEncoded();
 			full.add(certibyte2);
@@ -250,9 +237,6 @@ public class Util {
 		System.out.println("TAMAÑO PAQUETE sin firmar: "+ Files.readAllBytes(data.toPath()).length);
 
 		return bytesfirma; // CAMBIAR POR VOID 
-
-
-
 	}
 
 
