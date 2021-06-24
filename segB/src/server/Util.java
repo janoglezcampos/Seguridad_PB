@@ -21,6 +21,7 @@ public class Util {
 	private static ArrayList <String> publico = new ArrayList <String>();
 	private static String cipherAlias ="serverCipher";
 	private static String signAlias="serverSign";
+	private static String secretKeyAlias = "dataenckey";
 	private static String savePath="/Users/lexy/Desktop/Clases/Seguridad/serverSavedFiles/";
 
 	public static ArrayList<String> getPrivado() {
@@ -80,12 +81,14 @@ public class Util {
 						full.add(input.readNBytes(input.readInt()));
 						System.out.println("TAMAÑO CERTFIRMA "+ full.get(4).length);
 
-						System.out.println("Input entrante");
-						full.add(input.readNBytes(input.readInt()));
-						System.out.println("TAMAÑO CERTCIFRADO "+ full.get(5).length);
-
-					}else {
-
+						CertificateFactory cf   = CertificateFactory.getInstance("X.509");
+						InputStream cipherStream = new ByteArrayInputStream(input.readNBytes(input.readInt()));
+						Certificate cipherCert = cf.generateCertificate(cipherStream);
+						Server.setClientPublicKey(cipherCert.getPublicKey());
+						
+					}
+					else 
+					{
 						System.out.println("Input entrante");
 						full.add(input.readNBytes(input.readInt()));
 						System.out.println("TAMAÑO FILE "+ full.get(0).length);
@@ -103,16 +106,16 @@ public class Util {
 						full.add(input.readNBytes(input.readInt()));
 						System.out.println("TAMAÑO CERTFIRMA "+ full.get(2).length);
 
-						System.out.println("Input entrante");
-						full.add(input.readNBytes(input.readInt()));
-						System.out.println("TAMAÑO CERTCIFRADO "+ full.get(3).length);
+						CertificateFactory cf   = CertificateFactory.getInstance("X.509");
+						InputStream cipherStream = new ByteArrayInputStream(input.readNBytes(input.readInt()));
+						Certificate cipherCert = cf.generateCertificate(cipherStream);
+						Server.setClientPublicKey(cipherCert.getPublicKey());
 					}
 
 					char[] clave = contrasenha.toCharArray();
 					byte [] desencriptado;
 					if (confidencialidad.equals("PRIVADO")) {  
-
-						//Pasamos al desencriptado  
+						//Pasamos al desencriptado
 						System.out.println("Desencriptando LA CLAVE ");
 						Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding"); 
 						cipher.init(Cipher.DECRYPT_MODE,  Server.getKeyStore().getKey(cipherAlias,clave));
@@ -136,7 +139,7 @@ public class Util {
 					
 					Signature firma =Signature.getInstance("MD5withRSA");
 					
-					InputStream in = new ByteArrayInputStream(full.get(2));
+					InputStream in;
 					if(confidencialidad.equals("PRIVADO")) 
 					{
 						in = new ByteArrayInputStream(full.get(4));
@@ -193,26 +196,24 @@ public class Util {
 						if (confidencialidad.equals("PRIVADO")) {
 
 							privado.add(fichero);
-							
-							String localChipherAlgorithm ="RC2";
-							KeyGenerator kg= KeyGenerator.getInstance(localChipherAlgorithm); 
-							kg.init(128);
-							//SecretKey key_private= kg.generateKey();
 							PasswordProtection pass = new PasswordProtection(clave);
-							SecretKeyEntry secretKeyEntry = (SecretKeyEntry) Server.getKeyStore().getEntry("dataenckey", pass);
+							SecretKeyEntry secretKeyEntry = (SecretKeyEntry) Server.getKeyStore().getEntry(secretKeyAlias, pass);
 							SecretKey keyPrivate = secretKeyEntry.getSecretKey();
 							System.out.println("FORMATO clave de encriptado de info en el server : "+keyPrivate.getFormat());
 
 							//Ciframos el fichero
-							String concat= localChipherAlgorithm+"/CBC/PKCS5Padding";
+							String concat= algoritmo+"/CBC/PKCS5Padding";
 							Cipher cipher_private = Cipher.getInstance(concat); 
 							cipher_private.init(Cipher.ENCRYPT_MODE, keyPrivate);
+							Server.setLocalCipherParams(cipher_private.getParameters());
+							
 							byte [] file_encriptado2=cipher_private.doFinal(desencriptado);
 							filedef.write(file_encriptado2);
 							filedef.close();
 							output.println("Server: Archivo guradado ");
 						}
-						else {
+						else 
+						{
 							publico.add(fichero);
 							filedef.write(desencriptado);
 							filedef.close();
