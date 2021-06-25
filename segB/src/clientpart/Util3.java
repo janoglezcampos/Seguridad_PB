@@ -12,19 +12,24 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.security.KeyStoreException;
-import java.security.Principal;
+import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
+import server.Server;
 import server.Util;
 
 public class Util3 {
-	private static String authAlias="clientAuth";
+	private static String authAlias="clientauth";
+	private static String cipherAlias="clientcipher";
 	private static String savePath = "/Users/lexy/Desktop/Clases/Seguridad/clientRecoveredFiles/";
-	public static void start(final Socket client2, String idRegistro, String cert_rec) {
+	public static void start(final Socket client2, String idRegistro, String pass_wd) {
 		// TODO Auto-generated method stub
 
 		System.out.println("client start SEND ");
@@ -66,11 +71,25 @@ public class Util3 {
 					FileOutputStream filedef4=new FileOutputStream(savePath+"firmaSigRD");
 					filedef4.write(input.readNBytes(input.readInt()));
 					filedef4.close();
-					FileOutputStream filedef5=new FileOutputStream(savePath+"confidencialidad");
-					filedef5.write(input.readNBytes(input.readInt()));
-					filedef5.close();
-					FileOutputStream filedef6=new FileOutputStream(savePath+"imagen");
-					filedef6.write(input.readNBytes(input.readInt()));
+
+					FileOutputStream filedef6=new FileOutputStream(savePath+"file");
+					String confidencialidad = new String (input.readNBytes(input.readInt()));
+					byte [] file=input.readNBytes(input.readInt());
+					
+					if("PRIVADO".equals(confidencialidad)) {
+
+						byte[] cipherParams = input.readNBytes(input.readInt());
+						byte[] encriptedKey = input.readNBytes(input.readInt());
+						try {
+							filedef6.write(decriptFilePGP(encriptedKey, file, cipherParams, pass_wd, cipherAlias));
+						} catch (Exception e) {
+							System.out.println("Error desencriptando archivo: ");
+							e.printStackTrace();
+						}
+					}else {
+						filedef6.write(file);
+					}
+					
 					filedef6.close();
 
 					BufferedReader input2 = new BufferedReader(new InputStreamReader(client2.getInputStream()));
@@ -89,7 +108,22 @@ public class Util3 {
 
 
 		}.start();
+	}
+	
+	private static byte[] decriptFilePGP(byte[] encriptedKey, byte[] encriptedFile, byte[] cipherParams, String pass, String entryAlias) throws Exception {
+		//Pasamos al desencriptado
+		System.out.println("Desencriptando LA CLAVE ");
+		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+		cipher.init(Cipher.DECRYPT_MODE, Client.getKeyStore().getKey(entryAlias,pass.toCharArray()));
+		byte [] clave_desencriptada=cipher.doFinal(encriptedKey);
 
-
+		System.out.println("Desencriptando El Archivo ");
+		SecretKey key = new SecretKeySpec(clave_desencriptada,0,clave_desencriptada.length,"AES");
+		
+		cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		AlgorithmParameters params= AlgorithmParameters.getInstance("AES", "SunJCE");
+		params.init(cipherParams);
+		cipher.init(Cipher.DECRYPT_MODE, key, params);
+		return cipher.doFinal(encriptedFile);
 	}
 }

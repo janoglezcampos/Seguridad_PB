@@ -9,7 +9,11 @@ import javax.crypto.Cipher;
 import javax.net.ssl.*;
 
 
-
+//Arguments:
+//Users/lexy/Desktop/Clases/Seguridad/almacenes/keystoreServidor.jceks
+//Users/lexy/Desktop/Clases/Seguridad/almacenes/truststoreServidor.jceks
+//serverpass
+//RC2
 public class Server {
 
 	private static TrustManager[] trustManagers;
