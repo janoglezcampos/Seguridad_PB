@@ -5,11 +5,14 @@ import java.net.Socket;
 import java.nio.file.*;
 import java.security.AlgorithmParameters;
 import java.security.Key;
+import java.security.PublicKey;
 import java.security.KeyStore.PasswordProtection;
 import java.security.KeyStore.SecretKeyEntry;
 import java.security.cert.*;
 import java.util.ArrayList;
 import javax.crypto.*;
+
+import clientpart.Client;
 
 
 public class Util3 {
@@ -72,9 +75,16 @@ public class Util3 {
 								out.write(req.get(4));
 								out.writeInt(req.get(0).length);
 								out.write(req.get(0));
+								
 								byte [] decriptedFile = decriptDocument(req.get(5), secretKeyAlias, passwd_key, algorithm);
-								out.writeInt(decriptedFile.length);
-								out.write(decriptedFile);
+								req = encript2sendPGP(req, decriptedFile, Server.getClientPublicKey());
+								
+								out.writeInt(req.get(6).length);//Archivo encriptado
+								out.write(req.get(6));
+								out.writeInt(req.get(7).length);//Cipher parameters
+								out.write(req.get(7));
+								out.writeInt(req.get(8).length);//Encripted key
+								out.write(req.get(8));
 								out.flush();
 
 							} else {
@@ -203,5 +213,32 @@ public class Util3 {
 		
 		cipher_private.init(Cipher.DECRYPT_MODE, keyPrivate,params);
 		return cipher_private.doFinal(document);
+	}
+	
+	public static ArrayList<byte[]> encript2sendPGP(ArrayList<byte[]> message, byte[] fileDecripted, PublicKey publicKey) throws Exception {
+		//Generamos clave AES 128
+		String algorithm= "AES";
+
+		KeyGenerator kg= KeyGenerator.getInstance(algorithm);
+		kg.init(128);
+		SecretKey key= kg.generateKey();
+
+		//Ciframos el fichero, con key sin cifrar
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		byte [] file_encriptado=cipher.doFinal(fileDecripted);
+		
+		message.add(file_encriptado);
+		message.add(cipher.getParameters().getEncoded());
+
+		cipher=Cipher.getInstance("RSA/ECB/PKCS1Padding");
+
+		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+		byte[] clave_encriptada= cipher.doFinal(key.getEncoded());
+
+
+		System.out.println("TAMAÑO PAQUETE encriptado : "+ file_encriptado.length);
+		message.add(clave_encriptada);
+		return message;
 	}
 }
