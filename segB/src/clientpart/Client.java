@@ -9,7 +9,9 @@ import java.util.*;
 import javax.crypto.*;
 import javax.net.ssl.*;
 
-
+//Arguments:
+// /Users/lexy/Desktop/Clases/Seguridad/almacenes/keystoreClient.jceks
+// /Users/lexy/Desktop/Clases/Seguridad/almacenes/truststoreClient.jceks
 public class Client {
 
 	private static TrustManager[] trustManagers;
@@ -22,22 +24,14 @@ public class Client {
 	public static void main(String[] args)throws IOException, KeyManagementException, UnrecoverableKeyException, KeyStoreException, SignatureException {
 		System.out.println(System.getProperty("java.version"));
 
+		if (args.length!=2) {
+			System.out.println("Número de parametros incorrecto, introduzca keyStore y trustStore");
+			System.exit(0);
+		}
+
 		try {
-
-			if (args.length!=2) {
-				System.out.println("Número de parametros incorrecto, introduzca keyStore y trustStore");
-				System.exit(0);
-			}
-
-			try {
-				start(args);
-			} catch (KeyManagementException | UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException
-					| SignatureException | IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-		} catch (InvalidKeyException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException e) {
+			start(args);
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -118,7 +112,7 @@ public class Client {
 					e.printStackTrace();
 				}
 
-				Util3.start(conexion(),idRegistro,cert_rec);
+				Util3.start(conexion(),idRegistro,passwd_key3);
 
 				control=1;
 				break;
@@ -137,12 +131,12 @@ public class Client {
 		int port=8080;
 		String[]   cipherSuites = null;
 		String ip= "127.0.0.1";
-		
+
 
 		SSLContext sc = null;
 		try {
 			sc = SSLContext.getInstance("TLS");
-			
+
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -167,11 +161,11 @@ public class Client {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)); 
 		System.out.println ("Introduzca la CypherSuite: (Pulsar ENTER para usar TLS_RSA_WITH_AES_128_CBC_SHA256)");
 		String value = reader.readLine().trim();
-		
+
 		if("".equals(value) || value.isEmpty()) {
 			value = "TLS_RSA_WITH_AES_256_CBC_SHA256";
 		}
-		
+
 		String[] cipher = {value};
 
 		System.out.println ("Usando: " + cipher[0]);
@@ -201,7 +195,7 @@ public class Client {
 		return client;
 
 	}
-	
+
 	public static boolean ocspProperties(boolean enabled, boolean clientSideEnabled) {
 		System.setProperty("com.sun.net.ssl.checkRevocation", String.valueOf(enabled));
 		Security.setProperty("ocsp.enable", String.valueOf(clientSideEnabled));
@@ -209,12 +203,12 @@ public class Client {
 	}
 
 	public static void store(String[] args, String passwd_key) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException {
-		
+
 		KeyStore keyStore = KeyStore.getInstance("JCEKS");
 		//System.out.println(passwd_key);
 		keyStore.load(new FileInputStream(args[0]),passwd_key.toCharArray());
 
-		key=keyStore;
+		key = keyStore;
 
 		//keyStore.deleteEntry("cifradoc");
 		//keyStore.deleteEntry("firmac");
@@ -242,9 +236,9 @@ public class Client {
 		System.out.println("Tamaño del trust  "+trust.size());
 
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
-		
+
 		boolean revocationCheck = ocspProperties(ocspEnable, ocspClientEnable);
-		
+
 		if(revocationCheck) {
 			try {
 				CertPathBuilder certBuilder = CertPathBuilder.getInstance("PKIX");
@@ -252,12 +246,12 @@ public class Client {
 				revocationChecker.setOptions(EnumSet.of(PKIXRevocationChecker.Option.NO_FALLBACK));
 				//Los certificados incluyen el url
 				//revocationChecker.setOcspResponder(new URI(ocspURI));
-				
+
 				PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(trustedStore, new X509CertSelector());
 				pkixParams.addCertPathChecker(revocationChecker);
 				pkixParams.setRevocationEnabled(true);
 				ManagerFactoryParameters mfp =
-		                new CertPathTrustManagerParameters(pkixParams);
+						new CertPathTrustManagerParameters(pkixParams);
 				tmf.init(mfp);
 			}catch(Exception e) {
 				System.out.println("Exception on OCSP setup:" + e);
@@ -266,7 +260,7 @@ public class Client {
 		}else {
 			tmf.init(trustedStore);
 		}
-		
+
 		trustManagers = tmf.getTrustManagers();
 
 		System.setProperty("javax.net.ssl.keyStore", args[0]);
@@ -278,7 +272,7 @@ public class Client {
 		System.setProperty("javax.net.ssl.trustStore", args[1]);
 		System.setProperty("javax.net.ssl.trustStoreType",     "JCEKS");
 		System.setProperty("javax.net.ssl.trustStorePassword", passwd_key);
-		
+
 
 	}
 
