@@ -10,7 +10,6 @@ import javax.crypto.*;
 import javax.net.ssl.*;
 
 
-
 public class Client {
 
 	private static TrustManager[] trustManagers;
@@ -210,9 +209,6 @@ public class Client {
 	}
 
 	public static void store(String[] args, String passwd_key) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException {
-		
-		Security.setProperty("ocsp.enable", "true");
-		
 		
 		KeyStore keyStore = KeyStore.getInstance("JCEKS");
 		//System.out.println(passwd_key);
