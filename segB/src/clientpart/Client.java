@@ -21,6 +21,9 @@ public class Client {
 	private static boolean ocspEnable = true; //Habilita ocsp stapling
 	private static boolean ocspClientEnable = false; //Habilita ocsp client-side si ocsp stapling está habilitado
 
+	private static String cipherAlias="clientcipher";
+	private static String pass_wd="clientpass";
+
 	public static void main(String[] args)throws IOException, KeyManagementException, UnrecoverableKeyException, KeyStoreException, SignatureException {
 		System.out.println(System.getProperty("java.version"));
 
@@ -30,6 +33,9 @@ public class Client {
 		}
 
 		try {
+			store(args, "clientpass");
+			PrivateKey cipherPrivateKey = (PrivateKey) Client.getKeyStore().getKey(cipherAlias,pass_wd.toCharArray());
+			System.out.println(cipherPrivateKey.toString());
 			start(args);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
