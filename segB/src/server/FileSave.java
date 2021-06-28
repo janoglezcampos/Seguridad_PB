@@ -1,5 +1,7 @@
 package server;
 
+import common.*;
+
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -31,6 +33,51 @@ import java.util.LinkedList;
 
 public class FileSave {
 	
+	private String fileName;
+	private Response res;
+	
+	public FileSave(byte [] certFirma, byte[] file, byte[] firmaDoc,char[] clave,boolean isPrivate,String savePath, String keySignAlias) throws Exception{
+		//SACAMOS IDPROPIETARIO
+		InputStream in = new ByteArrayInputStream(certFirma);
+		CertificateFactory cf   = CertificateFactory.getInstance("X.509");
+		Certificate certificate = cf.generateCertificate(in);
+		X509Certificate extra= (X509Certificate) certificate ;
+		Principal idPropietario = extra.getIssuerDN();
+		System.out.println(extra.getSubjectDN().toString());
+		System.out.println("ID PROPIETARIO: "+ idPropietario.toString());
+		
+		// PASAMOS A GENERERAR LA FIRMA
+		int idRegistro= Server.getContador();
+		Server.incremetarContador();
+	
+		String sello= sello();
+		//byte  F= (byte) idRegistro; //recordar para pasar e imprimir hacer &0xff
+		
+	    ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+	    outputStream.write(idRegistro);
+	    outputStream.write(sello.getBytes());
+	    outputStream.write(idPropietario.toString().getBytes());
+	    outputStream.write(file);
+	    outputStream.write(firmaDoc);
+
+	    byte conjunto[] = outputStream.toByteArray();
+		
+		PrivateKey clavekey = (PrivateKey) Server.getKeyStore().getKey(keySignAlias, clave);
+		Signature firma =Signature.getInstance("MD5withRSA");
+		firma.initSign(clavekey);
+		firma.update(conjunto);
+		
+		byte[] bytesfirma= firma.sign();
+		
+		String nombreFichero= Integer.toString(idRegistro)+"_"+idPropietario.toString();
+		 
+		guardado(firmaDoc, idRegistro, sello, bytesfirma, nombreFichero, isPrivate, savePath);
+		
+		fileName=nombreFichero;
+		res = new Response(idRegistro, sello, idPropietario.toString(), bytesfirma, Server.getKeyStore().getCertificate(""));
+				
+	}
+	/*
 	public static String sigRD (byte [] certFirma, byte[] file, byte[] firmaDoc,char[] clave,String confidencialidad,String savePath, String keySignAlias) throws CertificateException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException{
 		
 		//SACAMOS IDPROPIETARIO
@@ -66,13 +113,14 @@ public class FileSave {
 		
 		String nombreFichero= Integer.toString(idRegistro)+"_"+idPropietario.toString();
 		 
-		guardado (firmaDoc,idRegistro,sello,bytesfirma,nombreFichero, confidencialidad,savePath);
+		guardado(firmaDoc,idRegistro,sello,bytesfirma,nombreFichero, confidencialidad,savePath);
 		
 		return nombreFichero;
 	}
+	*/
 
 
-	public static void guardado (byte[] firmaDoc, int idRegistro, String sello, byte[] bytesfirma, String nombreFichero,String confidencialidad,String savePath) throws IOException {
+	public static void guardado (byte[] firmaDoc, int idRegistro, String sello, byte[] bytesfirma, String nombreFichero,boolean isPrivate,String savePath) throws IOException {
 		
 		 String ruta_save=savePath+nombreFichero;
 		 File directorio = new File(ruta_save);
@@ -100,14 +148,10 @@ public class FileSave {
 		 filedef4.write(bytesfirma);
 		 filedef4.close();
 		 FileOutputStream filedef5=new FileOutputStream(ruta_save+"/confidencialidad");
+		 String confidencialidad = (isPrivate) ? "PRIVADO":"PUBLICO";
 		 filedef5.write(confidencialidad.getBytes());
 		 filedef5.close();
-	
 	}
-	
-
-	
-
 	
 	public static String sello() {
 
@@ -129,7 +173,13 @@ public class FileSave {
         return def;
 	}
 	
+	public String getFileName() {
+		return fileName;
+	}
 	
+	public Response getResponse() {
+		return res;
+	}
 	
 
 }

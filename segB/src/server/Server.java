@@ -25,13 +25,13 @@ public class Server {
 	private static String serverAuthCert = "serverauth";
 	
 	private static PublicKey clientPublicKey;
-	private static AlgorithmParameters localCipherParams; 
+	private static byte[] localCipherParams; 
 	
-	public static void setLocalCipherParams(AlgorithmParameters params) {
+	public static void setLocalCipherParams(byte[] params) {
 		localCipherParams = params;
 	}
 	
-	public static AlgorithmParameters getLocalCipherParams() {
+	public static byte[] getLocalCipherParams() {
 		return localCipherParams;
 	}
 	
@@ -58,6 +58,7 @@ public class Server {
 				System.out.println("Número de parametros incorrecto, introduzca keyStore, trustStore, contraseñaKeyStore y algoritmoCifrado");
 				System.exit(0);
 			}
+			
 			System.out.println("INICIANDO CONEXION");
 			start(args[0],args[1],args[2],args[3]);
 		} catch (Exception e) {
@@ -88,14 +89,12 @@ public class Server {
         final String[] cipherSuites;
 
         CustomizedServerSocketFactory(SSLContext ctx, String[] prots, String[] suites)
-                throws GeneralSecurityException {
+            throws GeneralSecurityException {
             super();
             sslc = (ctx != null) ? ctx : SSLContext.getDefault();
             protocols = prots;
             cipherSuites = suites;
 
-            // Create the Trust Manager Factory using the PKIX variant
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
         }
 
         @Override
@@ -141,9 +140,8 @@ public class Server {
                 if (protocols != null) {
                     ((SSLServerSocket)sock).setEnabledProtocols(protocols);
                 }
-                if (cipherSuites != null) {
-                    ((SSLServerSocket)sock).setEnabledCipherSuites(cipherSuites);
-                }
+                //Habilitadas todas la cipher suits
+                ((SSLServerSocket)sock).setEnabledCipherSuites(((SSLServerSocket)sock).getSupportedCipherSuites());
             }
         }
     }
@@ -168,6 +166,9 @@ public class Server {
                 Boolean.toString(servParams.respOverride));
         System.setProperty("jdk.tls.stapling.ignoreExtensions",
                 Boolean.toString(servParams.ignoreExts));
+        
+
+        Security.setProperty("jdk.tls.disabledAlgorithms", "");
 		store(keyStorePath,trustStorePath,password);
 		int port=443;
 
