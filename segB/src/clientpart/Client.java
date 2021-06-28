@@ -9,6 +9,7 @@ import java.util.*;
 import javax.crypto.*;
 import javax.net.ssl.*;
 
+
 //Arguments:
 // /Users/lexy/Desktop/Clases/Seguridad/almacenes/keystoreClient.jceks
 // /Users/lexy/Desktop/Clases/Seguridad/almacenes/truststoreClient.jceks
@@ -134,7 +135,7 @@ public class Client {
 
 	public static SSLSocket conexion() throws KeyManagementException, UnknownHostException, IOException {
 
-		int port=8080;
+		int port=443;
 		String[]   cipherSuites = null;
 		String ip= "127.0.0.1";
 
@@ -156,6 +157,8 @@ public class Client {
 		cipherSuites = ssf.getSupportedCipherSuites();
 		for (int i=0; i<cipherSuites.length; i++) 
 			System.out.println (cipherSuites[i]);
+		
+		
 
 
 		System.out.println ("****** CypherSuites Habilitadas por defecto **********");
@@ -175,11 +178,12 @@ public class Client {
 		String[] cipher = {value};
 
 		System.out.println ("Usando: " + cipher[0]);
+		InetAddress add = InetAddress.getByName("localhost");
 
-		SSLSocket client = (SSLSocket) ssf.createSocket(ip, port);
-
-		client.setEnabledCipherSuites(cipher);
-
+		SSLSocket client = (SSLSocket) ssf.createSocket(ip, port, add, 5000);
+		
+		String[] protocols={"TLSv1.2"};
+		client.setEnabledProtocols(protocols);
 		System.out.println ("\n****** CypherSuites Habilitadas en el ssl socket **********");
 
 		String[] cipherSuitesHabilSocket = client.getEnabledCipherSuites();
@@ -254,7 +258,7 @@ public class Client {
 				//revocationChecker.setOcspResponder(new URI(ocspURI));
 
 				PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(trustedStore, new X509CertSelector());
-				pkixParams.addCertPathChecker(revocationChecker);
+				//pkixParams.addCertPathChecker(revocationChecker);
 				pkixParams.setRevocationEnabled(true);
 				ManagerFactoryParameters mfp =
 						new CertPathTrustManagerParameters(pkixParams);
@@ -273,7 +277,7 @@ public class Client {
 		System.setProperty("javax.net.ssl.keyStoreType",     "JCEKS");
 		System.setProperty("javax.net.ssl.keyStorePassword", passwd_key);
 
-		System.setProperty("jdk.security.allowNonCaAnchor", "true" );
+		//System.setProperty("jdk.security.allowNonCaAnchor", "true" );
 
 		System.setProperty("javax.net.ssl.trustStore", args[1]);
 		System.setProperty("javax.net.ssl.trustStoreType",     "JCEKS");
