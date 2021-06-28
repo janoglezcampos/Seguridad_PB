@@ -34,6 +34,8 @@ public class Client {
 		}
 
 		try {
+			Security.setProperty("jdk.tls.disabledAlgorithms", "");
+			System.out.println(Security.getProperty("jdk.tls.disabledAlgorithms")); 
 			store(args, "clientpass");
 			PrivateKey cipherPrivateKey = (PrivateKey) Client.getKeyStore().getKey(cipherAlias,pass_wd.toCharArray());
 			System.out.println(cipherPrivateKey.toString());
@@ -156,23 +158,17 @@ public class Client {
 		System.out.println ("******** CypherSuites Disponibles **********");
 		cipherSuites = ssf.getSupportedCipherSuites();
 		for (int i=0; i<cipherSuites.length; i++) 
-			System.out.println (cipherSuites[i]);
-		
-		
-
-
-		System.out.println ("****** CypherSuites Habilitadas por defecto **********");
-		String[] cipherSuitesDef = ssf.getDefaultCipherSuites();
-		for (int i=0; i<cipherSuitesDef.length; i++) 
-			System.out.println (cipherSuitesDef[i]);
-
+			if(cipherSuites[i].contains("NULL")) System.out.println (cipherSuites[i]);
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)); 
-		System.out.println ("Introduzca la CypherSuite: (Pulsar ENTER para usar TLS_RSA_WITH_AES_128_CBC_SHA256)");
+		System.out.println ("Introduzca la CypherSuite: (Pulsar ENTER para usar TLS_RSA_WITH_NULL_SHA256)");
 		String value = reader.readLine().trim();
-
+		//https://datatracker.ietf.org/doc/html/rfc4346#appendix-C
+		//https://docs.oracle.com/javase/7/docs/technotes/guides/security/SunProviders.html#SunJSSEProvider
+		//Queremos autenticación pero no cifrado!
+		//TLS_RSA_WITH_NULL_SHA256
 		if("".equals(value) || value.isEmpty()) {
-			value = "TLS_RSA_WITH_AES_256_CBC_SHA256";
+			value = "TLS_RSA_WITH_NULL_SHA256";
 		}
 
 		String[] cipher = {value};
@@ -184,6 +180,7 @@ public class Client {
 		
 		String[] protocols={"TLSv1.2"};
 		client.setEnabledProtocols(protocols);
+		client.setEnabledCipherSuites(cipher);
 		System.out.println ("\n****** CypherSuites Habilitadas en el ssl socket **********");
 
 		String[] cipherSuitesHabilSocket = client.getEnabledCipherSuites();

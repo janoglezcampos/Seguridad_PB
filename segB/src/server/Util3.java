@@ -1,5 +1,7 @@
 package server;
 
+import common.*;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.*;
@@ -76,8 +78,8 @@ public class Util3 {
 								out.writeInt(req.get(0).length);
 								out.write(req.get(0));
 								
-								byte [] decriptedFile = decriptDocument(req.get(5), secretKeyAlias, passwd_key, algorithm);
-								req = encript2sendPGP(req, decriptedFile, Server.getClientPublicKey());
+								byte [] decriptedFile = Encription.decriptDocument(req.get(5), secretKeyAlias, passwd_key, algorithm, Server.getLocalCipherParams(), Server.getKeyStore());
+								req = Encription.encript2sendPGP(req, decriptedFile, Server.getClientPublicKey());
 								
 								out.writeInt(req.get(6).length);//Archivo encriptado
 								out.write(req.get(6));
@@ -197,48 +199,5 @@ public class Util3 {
 			}
 		}
 		return req;
-	}
-	
-	public static byte[] decriptDocument(byte[] document, String keyAlias, String password, String algorithm) throws Exception {
-		PasswordProtection pass = new PasswordProtection(password.toCharArray());
-		
-		SecretKeyEntry secretKeyEntry = (SecretKeyEntry) Server.getKeyStore().getEntry(keyAlias, pass);
-		SecretKey keyPrivate = secretKeyEntry.getSecretKey();
-		
-		String concat= algorithm+"/CBC/PKCS5Padding";
-		Cipher cipher_private = Cipher.getInstance(concat);
-		
-		AlgorithmParameters params= AlgorithmParameters.getInstance(algorithm, "SunJCE");
-		params.init(Server.getLocalCipherParams().getEncoded());
-		
-		cipher_private.init(Cipher.DECRYPT_MODE, keyPrivate,params);
-		return cipher_private.doFinal(document);
-	}
-	
-	public static ArrayList<byte[]> encript2sendPGP(ArrayList<byte[]> message, byte[] fileDecripted, PublicKey publicKey) throws Exception {
-		//Generamos clave AES 128
-		String algorithm= "AES";
-
-		KeyGenerator kg= KeyGenerator.getInstance(algorithm);
-		kg.init(128);
-		SecretKey key= kg.generateKey();
-
-		//Ciframos el fichero, con key sin cifrar
-		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-		cipher.init(Cipher.ENCRYPT_MODE, key);
-		byte [] file_encriptado=cipher.doFinal(fileDecripted);
-		
-		message.add(file_encriptado);
-		message.add(cipher.getParameters().getEncoded());
-
-		cipher=Cipher.getInstance("RSA/ECB/PKCS1Padding");
-
-		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-		byte[] clave_encriptada= cipher.doFinal(key.getEncoded());
-
-
-		System.out.println("TAMAÑO PAQUETE encriptado : "+ file_encriptado.length);
-		message.add(clave_encriptada);
-		return message;
 	}
 }

@@ -1,5 +1,7 @@
 package clientpart;
 
+import common.*;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
@@ -7,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -26,9 +29,9 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 
 public class Util {
-	
-	
-	
+
+
+
 	//public static SecretKey  keydef ;
 	//public static byte [] encript;
 	public static String signAlias= "clientsign";
@@ -48,11 +51,28 @@ public class Util {
 			try {
 				//Util.registrar("name", "confidencialidad", "C:\\Users\\usuario\\Desktop\\alamcenes/prueba.PNG");
 				Util.registrar(passwd_key, ubicacion,confidencialidad);
-			} catch (InvalidKeyException | UnrecoverableKeyException | NoSuchAlgorithmException
-					| NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | KeyStoreException
-					| SignatureException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			
+			/*
+			 PRIVADO:
+				 Cofidencialidad
+				 Archivo
+				 Parametros
+				 Clave
+				 Firma
+				 Nombre de archivo
+				 Certificado firma
+				 Cerificado cifrado
+			 PUBLICO:
+				 Confidencialidad
+				 Archivo
+				 Firma
+				 Nombre de documento
+				 Certificado de firma
+				 Cerificado de cifrado
+			 */
 
 			if (confidencialidad.equals("PRIVADO")) {
 
@@ -63,14 +83,14 @@ public class Util {
 				System.out.println("CONFIDENCIALIDAD sent");
 
 				System.out.println("Enviamos file encriptado de tamaño:  "+ full.get(1).length);
-				out.writeInt(full.get(1).length);
-				out.write(full.get(1));
+				out.writeInt(full.get(0).length);
+				out.write(full.get(0));
 				out.flush();
 				System.out.println("FILE ENCRIPTADO sent");
 
 				System.out.println("Enviamos parametros de tamaño:  "+ full.get(0).length);
-				out.writeInt(full.get(0).length);
-				out.write(full.get(0));
+				out.writeInt(full.get(1).length);
+				out.write(full.get(1));
 				out.flush();
 				System.out.println("PARAMETROS sent");
 
@@ -144,10 +164,19 @@ public class Util {
 
 
 			}
-
-			BufferedReader input = new BufferedReader(new InputStreamReader(clientSock.getInputStream()));
-			String received = input.readLine();
-			System.out.println("Received : " + received);
+			ObjectInputStream response = new ObjectInputStream(clientSock.getInputStream());
+			try {
+				Response res = (Response) response.readObject();
+				if(res.getError()!=0) {
+					System.out.println("Error al guardar el archivo: " + res.getErrorMsg());
+				}else{
+					Certificate firma = res.getCert();
+				}
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			response.close();
 			clientSock.close();
 
 		} catch (IOException e) {
@@ -157,12 +186,16 @@ public class Util {
 	}
 
 
-	public static byte[] registrar(String passwd_key, String ubicacion, String confidencialidad) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, UnrecoverableKeyException, KeyStoreException, SignatureException {
+	public static byte[] registrar(String passwd_key, String ubicacion, String confidencialidad) throws Exception {
 
 		char[] clave = passwd_key.toCharArray();
 		File data = new File(ubicacion);
 
 		if (confidencialidad.equals("PRIVADO")) {
+
+			PublicKey clavetrust = Client.getTrust().getCertificate(serverCipherAlias).getPublicKey();
+			full = Encription.encript2sendPGP(full, Files.readAllBytes(data.toPath()), clavetrust);
+			/*
 			//Generamos clave AES 128
 			String algorithm= "AES";
 
@@ -182,7 +215,6 @@ public class Util {
 
 			//OBTENEMOS CLAVE DEL TRUST 
 
-			PublicKey clavetrust = Client.getTrust().getCertificate(serverCipherAlias).getPublicKey();
 
 			//Ciframos la clave con la que se cifro el fichero
 			cipher=Cipher.getInstance("RSA/ECB/PKCS1Padding");
@@ -195,6 +227,7 @@ public class Util {
 			full.add(clave_encriptada);
 
 			System.out.println("TAMAÑO PAQUETE encriptado : "+ file_encriptado.length);
+			*/
 
 		}else {
 			full.add(Files.readAllBytes(data.toPath()));

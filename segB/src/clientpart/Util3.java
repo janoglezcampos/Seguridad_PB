@@ -1,5 +1,7 @@
 package clientpart;
 
+import common.*;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -81,7 +83,7 @@ public class Util3 {
 						byte[] cipherParams = input.readNBytes(input.readInt());
 						byte[] encriptedKey = input.readNBytes(input.readInt());
 						try {
-							filedef6.write(decriptFilePGP(encriptedKey, file, cipherParams, pass_wd, cipherAlias));
+							filedef6.write(Encription.decriptFilePGP(encriptedKey, file, cipherParams, pass_wd, cipherAlias, Client.getKeyStore()));
 						} catch (Exception e) {
 							System.out.println("Error desencriptando archivo: ");
 							e.printStackTrace();
@@ -108,22 +110,5 @@ public class Util3 {
 
 
 		}.start();
-	}
-	
-	private static byte[] decriptFilePGP(byte[] encriptedKey, byte[] encriptedFile, byte[] cipherParams, String pass, String entryAlias) throws Exception {
-		//Pasamos al desencriptado
-		System.out.println("Desencriptando LA CLAVE ");
-		Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-		cipher.init(Cipher.DECRYPT_MODE, Client.getKeyStore().getKey(entryAlias,pass.toCharArray()));
-		byte [] clave_desencriptada=cipher.doFinal(encriptedKey);
-
-		System.out.println("Desencriptando El Archivo ");
-		SecretKey key = new SecretKeySpec(clave_desencriptada,0,clave_desencriptada.length,"AES");
-		
-		cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-		AlgorithmParameters params= AlgorithmParameters.getInstance("AES", "SunJCE");
-		params.init(cipherParams);
-		cipher.init(Cipher.DECRYPT_MODE, key, params);
-		return cipher.doFinal(encriptedFile);
 	}
 }
