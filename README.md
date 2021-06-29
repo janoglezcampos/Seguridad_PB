@@ -43,8 +43,9 @@ en la respuesta, por lo tanto tambien se ignora si es publico.
 * ~~Validar CertFirmaS (cliente)~~ :white_check_mark:
 * ~~Verificar firma al recibir ok (cliente)~~ :white_check_mark:
 * ~~Guardar hash archivo enviado y asociarlo al idRegistro (cliente)~~ :white_check_mark:
-* Almacenar todo en un fichero, no en un directorio (server)
+* ~~Almacenar todo en un fichero, no en un directorio (server)~~ :white_check_mark:
 * Eliminar archivo enviado (cliente)
+* Reescribir hashes en el txt cuando se repite idRegistor
 
 ## Funcionalidad 2:
 * Generar respuestas serverside (server)
@@ -66,7 +67,10 @@ en la respuesta, por lo tanto tambien se ignora si es publico.
 * ~~Verificar certificado de firma_s (cliente)~~ :white_check_mark:
 * ~~Comprobar que sigRD es válida (cliente)~~ :white_check_mark:
 * ~~Computar hash y comparar con el almacenado en Funcionalidad 1 (cliente)~~ :white_check_mark:
+* Enviar nombre del documento (servidor)
+* Guardar con nombre del documento (cliente)
+
 
 ## Opcional:
-* Crear una base de datos, aunque sea txt, y no depender de las listas (para permitir cerrar y reabrir cliente).
+* ~~Crear una base de datos, aunque sea txt, y no depender de las listas (para permitir cerrar y reabrir cliente).~~ :white_check_mark:
 * Mejorar codigo, POO
