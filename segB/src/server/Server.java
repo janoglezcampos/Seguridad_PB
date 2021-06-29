@@ -4,8 +4,6 @@ import java.io.*;
 import java.net.*;
 import java.security.*;
 import java.security.cert.*;
-
-import javax.crypto.Cipher;
 import javax.net.ssl.*;
 
 
@@ -15,32 +13,33 @@ import javax.net.ssl.*;
 //serverpass
 //RC2
 public class Server {
+	public static final String SAVEPATH="/Users/lexy/Desktop/Clases/Seguridad/serverSavedFiles/";
 
+	public static final String CIPHERALIAS ="serverCipher";
+	public static final String SIGNALIAS="serverSign";
+	public static final String SECRETKEYALIAS = "dataenckey";
+	
 	private static TrustManager[] trustManagers;
 	private static KeyManager[] keyManagers ;
 	private static KeyStore trust;
 	private static KeyStore key;
-	private static int contador=0;
+	private static int contador;
 	private static boolean ocspEnable = true;
 	private static String serverAuthCert = "serverauth";
 	
-	private static PublicKey clientPublicKey;
-	private static byte[] localCipherParams;
-	
-	public static void setLocalCipherParams(byte[] params) {
-		localCipherParams = params;
-	}
-	
-	public static byte[] getLocalCipherParams() {
-		return localCipherParams;
-	}
-	
-	public static void setClientPublicKey(PublicKey publicKey) {
-		clientPublicKey = publicKey;
-	}
-	
-	public static PublicKey getClientPublicKey() {
-		return clientPublicKey;
+	private static void initContador() {
+		File[] fileList =new File (SAVEPATH).listFiles();
+		String fileName;
+		int lastCounter=0;
+		int idRegistro = 0;
+		for(File file : fileList) {
+			fileName = file.getName();
+			if(fileName.contains(".sig")) {
+				idRegistro = Integer.parseInt(fileName.split("_")[0]);
+				if(idRegistro>lastCounter) lastCounter = idRegistro;
+			}
+		}
+		contador = lastCounter+1;
 	}
 	
 	public static int getContador() {
@@ -62,7 +61,6 @@ public class Server {
 			System.out.println("INICIANDO CONEXION");
 			start(args[0],args[1],args[2],args[3]);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -124,30 +122,36 @@ public class Server {
 		((SSLServerSocket)serverSocket1).setNeedClientAuth(true);
 		//((SSLServerSocket) serverSocket1).setEnabledProtocols(protocols);
 		System.out.println("Esperando conexión... (OCSP habilitado: "+ System.getProperty("jdk.tls.server.enableStatusRequestExtension") +")");
-
-		while (true) {			
-			Socket client = serverSocket1.accept();
-			System.out.println(client.getRemoteSocketAddress().toString());
-			System.out.println("Client accepted");
-			client.setSoLinger(true, 10000);
-
-			DataInputStream input= new DataInputStream(client.getInputStream());
-			System.out.println("Operación entrante");
-			String operacion= new String (input.readNBytes(input.readInt()));
-			//input.close();
-			switch(operacion) {
-			case "1":
-				Util.receiveFile(client,chipherAlgoritm,password);
-				break;
-			case "2":
-				Util2.start(client);
-				break;
-			case "3":
-				Util3.start(client, chipherAlgoritm, password);
-				break;
-			default:
-				System.out.println("Operación desconocida");
-				break;
+		
+		initContador();
+		while (true) {
+			try {
+				Socket client = serverSocket1.accept();
+				System.out.println(client.getRemoteSocketAddress().toString());
+				System.out.println("Client accepted");
+				client.setSoLinger(true, 10000);
+	
+				DataInputStream input= new DataInputStream(client.getInputStream());
+				System.out.println("Operación entrante");
+				String operacion= new String (input.readNBytes(input.readInt()));
+				//input.close();
+				switch(operacion) {
+				case "1":
+					Util.receiveFile(client,chipherAlgoritm,password);
+					break;
+				case "2":
+					Util2.start(client);
+					break;
+				case "3":
+					Util3.retrieveFile(client, chipherAlgoritm, password);
+					break;
+				default:
+					System.out.println("Operación desconocida");
+					break;
+				}
+			}catch(Exception e) {
+				System.out.println("Error ejecutando durante la comunicacion");
+				e.printStackTrace();
 			}
 		}
 	}
