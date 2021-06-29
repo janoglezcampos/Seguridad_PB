@@ -32,7 +32,8 @@ public class Encription {
 	}
 	
 
-	public static ArrayList<byte[]> encript2sendPGP(ArrayList<byte[]> message, byte[] fileDecripted, PublicKey publicKey) throws Exception {
+	public static ArrayList<byte[]> encript2sendPGP(byte[] fileDecripted, PublicKey publicKey) throws Exception {
+		ArrayList<byte[]> message = new ArrayList<byte[]>();
 		//Generamos clave AES 128
 		String algorithm= "AES";
 
