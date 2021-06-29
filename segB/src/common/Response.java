@@ -18,6 +18,7 @@ public class Response implements Serializable {
 	private byte [] nonEncriptedFile;
 	private byte [] cipherParams;
 
+	//Respuesta de registro
 	public Response(int idRegistro, String selloTemporal, String idPropietario, byte[] SigRD, Certificate CertFirmaS) {
 		this.idRegistro = idRegistro;
 		this.nError=0;
@@ -27,6 +28,7 @@ public class Response implements Serializable {
 		this.CertFirmaS = CertFirmaS;
 	}
 
+	//Respuesta de recuperacion de archivo privado
 	public Response(int idRegistro, String idPropietario, String selloTemporal, byte[] encriptedFile, byte[] cipherParams, byte[] encriptedKey, byte[] SigRD, Certificate CertFirmaS) {
 		this(idRegistro, selloTemporal, idPropietario, SigRD, CertFirmaS);
 		this.isPrivate = true;
@@ -34,6 +36,7 @@ public class Response implements Serializable {
 		this.encriptedKey = encriptedKey;
 		this.cipherParams = cipherParams;
 	}
+	//Respuesta de recuperacion de archivo publico
 	public Response(int idRegistro, String idPropietario, String selloTemporal, byte[] file, byte[] SigRD, Certificate CertFirmaS) {
 		this(idRegistro, selloTemporal, idPropietario, SigRD, CertFirmaS);
 		this.isPrivate = false;
