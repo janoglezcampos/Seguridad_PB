@@ -20,9 +20,6 @@ public class Client {
 	private static KeyStore key;
 	private static boolean ocspEnable = true; //Habilita ocsp stapling
 	private static boolean ocspClientEnable = false; //Habilita ocsp client-side si ocsp stapling está habilitado
-
-	private static String cipherAlias="clientcipher";
-	private static String pass_wd="clientpass";
 	
 	private static String sentDatabase = "/Users/lexy/Desktop/Clases/Seguridad/sentDatabase.txt";
 
@@ -103,6 +100,7 @@ public class Client {
 
 				System.out.println("Introduzca el idRegistro ");
 				String idRegistro= reader.readLine();
+				//Es necesario? Creo que no
 				System.out.println("Introduzca el CertAuth");
 				String cert_rec= reader.readLine();
 				System.out.println("Introduzca a contraseña del keyStore");
@@ -283,6 +281,8 @@ public class Client {
 		return key;
 	}
 
+	
+	//Sobrescribir entrada si el idRegistro se repite, si solo se añade y se añadio otro anteriormente, dara error
 	public static void saveHash(int idRegistro, byte [] content) {
 		BufferedWriter bw;
 		try {
