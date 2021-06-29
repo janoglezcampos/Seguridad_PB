@@ -1,5 +1,6 @@
 package common;
 
+import java.io.ByteArrayOutputStream;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -61,5 +62,17 @@ public class Validation {
 		firma.update(content);
 		return firma.sign();
 	}
+	
+	public static byte[] getSignRDContent(int idRegistro, String selloTemporal,String idPropietario, byte[] nonEncriptedFile, byte[] firmaDoc) throws Exception {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+		outputStream.write(idRegistro);
+		outputStream.write(selloTemporal.getBytes());
+		outputStream.write(idPropietario.toString().getBytes());
+		outputStream.write(nonEncriptedFile);
+		outputStream.write(firmaDoc);
+
+		return outputStream.toByteArray();
+	}
+
 
 }
