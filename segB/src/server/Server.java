@@ -25,7 +25,7 @@ public class Server {
 	private static String serverAuthCert = "serverauth";
 	
 	private static PublicKey clientPublicKey;
-	private static byte[] localCipherParams; 
+	private static byte[] localCipherParams;
 	
 	public static void setLocalCipherParams(byte[] params) {
 		localCipherParams = params;
@@ -48,7 +48,7 @@ public class Server {
 	}
 
 	public static void incremetarContador() {
-		contador = contador+1;
+		contador+=1;
 	}
 
 	public  static void main(String[] args) {
@@ -83,69 +83,6 @@ public class Server {
         ServerParameters() { }
     }
 
-    static class CustomizedServerSocketFactory extends SSLServerSocketFactory {
-        final SSLContext sslc;
-        final String[] protocols;
-        final String[] cipherSuites;
-
-        CustomizedServerSocketFactory(SSLContext ctx, String[] prots, String[] suites)
-            throws GeneralSecurityException {
-            super();
-            sslc = (ctx != null) ? ctx : SSLContext.getDefault();
-            protocols = prots;
-            cipherSuites = suites;
-
-        }
-
-        @Override
-        public ServerSocket createServerSocket(int port) throws IOException {
-            ServerSocket sock =
-                    sslc.getServerSocketFactory().createServerSocket(port);
-            customizeSocket(sock);
-            return sock;
-        }
-
-        @Override
-        public ServerSocket createServerSocket(int port, int backlog)
-                throws IOException {
-            ServerSocket sock =
-                    sslc.getServerSocketFactory().createServerSocket(port,
-                            backlog);
-            customizeSocket(sock);
-            return sock;
-        }
-
-        @Override
-        public ServerSocket createServerSocket(int port, int backlog,
-                InetAddress ifAddress) throws IOException {
-            ServerSocket sock =
-                    sslc.getServerSocketFactory().createServerSocket(port,
-                            backlog, ifAddress);
-            customizeSocket(sock);
-            return sock;
-        }
-
-        @Override
-        public String[] getDefaultCipherSuites() {
-            return sslc.getDefaultSSLParameters().getCipherSuites();
-        }
-
-        @Override
-        public String[] getSupportedCipherSuites() {
-            return sslc.getSupportedSSLParameters().getCipherSuites();
-        }
-
-        private void customizeSocket(ServerSocket sock) {
-            if (sock instanceof SSLServerSocket) {
-                if (protocols != null) {
-                    ((SSLServerSocket)sock).setEnabledProtocols(protocols);
-                }
-                //Habilitadas todas la cipher suits
-                ((SSLServerSocket)sock).setEnabledCipherSuites(((SSLServerSocket)sock).getSupportedCipherSuites());
-            }
-        }
-    }
-        
 
 	public static void start(String keyStorePath, String trustStorePath, String password, String chipherAlgoritm) throws Exception {
 		System.out.println("INICIANDO ALMACENES");
@@ -189,35 +126,27 @@ public class Server {
 		System.out.println("Esperando conexión... (OCSP habilitado: "+ System.getProperty("jdk.tls.server.enableStatusRequestExtension") +")");
 
 		while (true) {			
-			Socket aClient = serverSocket1.accept();
-			System.out.println(aClient.getRemoteSocketAddress().toString());
+			Socket client = serverSocket1.accept();
+			System.out.println(client.getRemoteSocketAddress().toString());
 			System.out.println("Client accepted");
-			aClient.setSoLinger(true, 10000);
+			client.setSoLinger(true, 10000);
 
-			DataInputStream input= new DataInputStream(aClient.getInputStream());
+			DataInputStream input= new DataInputStream(client.getInputStream());
 			System.out.println("Operación entrante");
 			String operacion= new String (input.readNBytes(input.readInt()));
 			//input.close();
-
-
-			//Registrar documento
-			if (operacion.equals("1")) {
-				Util.startServerWorking(aClient,chipherAlgoritm,password);
-
-				//input.close();
-				//break;
-			}
-			//Listar documentos
-			else if (operacion.equals("2")) {
-				Util2.start(aClient);
-			}
-			//Recuperar documentos
-			else if (operacion.equals("3")) {
-				Util3.start(aClient, chipherAlgoritm, password);
-
-			}
-			else {
-				System.out.println("Operación incorrecta");
+			switch(operacion) {
+			case "1":
+				Util.receiveFile(client,chipherAlgoritm,password);
+				break;
+			case "2":
+				Util2.start(client);
+				break;
+			case "3":
+				Util3.start(client, chipherAlgoritm, password);
+				break;
+			default:
+				System.out.println("Operación desconocida");
 				break;
 			}
 		}
@@ -296,6 +225,71 @@ public class Server {
 	public static KeyStore getKeyStore() {
 		return key;
 	}
+	
+
+    static class CustomizedServerSocketFactory extends SSLServerSocketFactory {
+        final SSLContext sslc;
+        final String[] protocols;
+        final String[] cipherSuites;
+
+        CustomizedServerSocketFactory(SSLContext ctx, String[] prots, String[] suites)
+            throws GeneralSecurityException {
+            super();
+            sslc = (ctx != null) ? ctx : SSLContext.getDefault();
+            protocols = prots;
+            cipherSuites = suites;
+
+        }
+
+        @Override
+        public ServerSocket createServerSocket(int port) throws IOException {
+            ServerSocket sock =
+                    sslc.getServerSocketFactory().createServerSocket(port);
+            customizeSocket(sock);
+            return sock;
+        }
+
+        @Override
+        public ServerSocket createServerSocket(int port, int backlog)
+                throws IOException {
+            ServerSocket sock =
+                    sslc.getServerSocketFactory().createServerSocket(port,
+                            backlog);
+            customizeSocket(sock);
+            return sock;
+        }
+
+        @Override
+        public ServerSocket createServerSocket(int port, int backlog,
+                InetAddress ifAddress) throws IOException {
+            ServerSocket sock =
+                    sslc.getServerSocketFactory().createServerSocket(port,
+                            backlog, ifAddress);
+            customizeSocket(sock);
+            return sock;
+        }
+
+        @Override
+        public String[] getDefaultCipherSuites() {
+            return sslc.getDefaultSSLParameters().getCipherSuites();
+        }
+
+        @Override
+        public String[] getSupportedCipherSuites() {
+            return sslc.getSupportedSSLParameters().getCipherSuites();
+        }
+
+        private void customizeSocket(ServerSocket sock) {
+            if (sock instanceof SSLServerSocket) {
+                if (protocols != null) {
+                    ((SSLServerSocket)sock).setEnabledProtocols(protocols);
+                }
+                //Habilitadas todas la cipher suits
+                ((SSLServerSocket)sock).setEnabledCipherSuites(((SSLServerSocket)sock).getSupportedCipherSuites());
+            }
+        }
+    }
+        
 
 	//Modificando chooseServerAlias podemos definir SIEMPRE que certificado enviamos, así podemos asegurar que la comprobación ocsp se hace
 	//sobre el certificado que queremos
