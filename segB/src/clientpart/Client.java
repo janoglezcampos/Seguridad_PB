@@ -14,7 +14,6 @@ import javax.net.ssl.*;
 // /Users/lexy/Desktop/Clases/Seguridad/almacenes/keystoreClient.jceks
 // /Users/lexy/Desktop/Clases/Seguridad/almacenes/truststoreClient.jceks
 public class Client {
-
 	private static TrustManager[] trustManagers;
 	private static KeyManager[] keyManagers ;
 	private static KeyStore trust;
@@ -24,6 +23,8 @@ public class Client {
 
 	private static String cipherAlias="clientcipher";
 	private static String pass_wd="clientpass";
+	
+	private static String sentDatabase = "/Users/lexy/Desktop/Clases/Seguridad/sentDatabase.txt";
 
 	public static void main(String[] args)throws IOException, KeyManagementException, UnrecoverableKeyException, KeyStoreException, SignatureException {
 		System.out.println(System.getProperty("java.version"));
@@ -34,11 +35,6 @@ public class Client {
 		}
 
 		try {
-			Security.setProperty("jdk.tls.disabledAlgorithms", "");
-			System.out.println(Security.getProperty("jdk.tls.disabledAlgorithms")); 
-			store(args, "clientpass");
-			PrivateKey cipherPrivateKey = (PrivateKey) Client.getKeyStore().getKey(cipherAlias,pass_wd.toCharArray());
-			System.out.println(cipherPrivateKey.toString());
 			start(args);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -47,7 +43,6 @@ public class Client {
 	}
 
 	public static void start(String [] args) throws IOException, KeyManagementException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnrecoverableKeyException, KeyStoreException, SignatureException {
-
 
 		System.out.println("Selecione la operación a realizar (teclee el número): "
 				+ "\n 1.Registrar documento (nombreDoc, tipoConfidencialidad, E_PKS(K), E_K(documento), firmaDoc, CertFirma_C, CertCifrado_C) "
@@ -79,7 +74,7 @@ public class Client {
 				}
 
 				//La clave que aqui se introduce es la de las claves, no la del keystore, en este caso es la misma
-				Util.startClientWorking(conexion(),name,confidencialidad,ubicacion,passwd_key);
+				Util.sendFile(conexion(),name,confidencialidad,ubicacion,passwd_key);
 
 				control =1;
 				break;
@@ -131,8 +126,6 @@ public class Client {
 
 			}
 		}
-
-
 	}
 
 	public static SSLSocket conexion() throws KeyManagementException, UnknownHostException, IOException {
@@ -141,6 +134,7 @@ public class Client {
 		String[]   cipherSuites = null;
 		String ip= "127.0.0.1";
 
+		Security.setProperty("jdk.tls.disabledAlgorithms", "");
 
 		SSLContext sc = null;
 		try {
@@ -202,7 +196,7 @@ public class Client {
 		return client;
 
 	}
-
+	
 	public static boolean ocspProperties(boolean enabled, boolean clientSideEnabled) {
 		System.setProperty("com.sun.net.ssl.checkRevocation", String.valueOf(enabled));
 		Security.setProperty("ocsp.enable", String.valueOf(clientSideEnabled));
@@ -279,8 +273,6 @@ public class Client {
 		System.setProperty("javax.net.ssl.trustStore", args[1]);
 		System.setProperty("javax.net.ssl.trustStoreType",     "JCEKS");
 		System.setProperty("javax.net.ssl.trustStorePassword", passwd_key);
-
-
 	}
 
 	public static KeyStore getTrust () {
@@ -291,7 +283,54 @@ public class Client {
 		return key;
 	}
 
-
-
+	public static void saveHash(int idRegistro, byte [] content) {
+		BufferedWriter bw;
+		try {
+			MessageDigest shaDigest = MessageDigest.getInstance("SHA-512");
+			shaDigest.update(content);
+			byte [] hash = shaDigest.digest();
+			bw = new BufferedWriter(new FileWriter(sentDatabase,true));
+			PrintWriter out = new PrintWriter(bw);
+			out.println(idRegistro+"//"+hashToString(hash));
+			out.close();
+		} catch (IOException | NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static boolean checkHash(int idRegistro, byte [] content) {
+		BufferedReader reader;
+		try {
+			MessageDigest shaDigest = MessageDigest.getInstance("SHA-512");
+			shaDigest.update(content);
+			byte [] hash = shaDigest.digest();
+			System.out.println("Checking hash: " + hashToString(hash));
+			
+			reader = new BufferedReader(new FileReader(sentDatabase));
+			String line = reader.readLine();
+			while (line != null) {
+				String[] parts = line.split("//");
+				if(parts[0].equals(String.valueOf(idRegistro))) {
+					reader.close();
+					return parts[1].equals(hashToString(hash));
+				}
+				line = reader.readLine();
+			}
+			reader.close();
+		} catch (IOException | NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	private static String hashToString(byte[] hash) {
+		StringBuilder sb = new StringBuilder();
+	    for(int i=0; i< hash.length ;i++)
+	    {
+	        sb.append(Integer.toString((hash[i] & 0xff) + 0x100, 16).substring(1));
+	    }
+	    //return complete hash
+	   return sb.toString();
+	}
 
 }
