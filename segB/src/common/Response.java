@@ -11,10 +11,14 @@ public class Response implements Serializable {
 	private String idPropietario;
 	private byte[] SigRD;
 	private Certificate CertFirmaS;
-	private int forFunctionality;
 	
+	private boolean isPrivate;
+	private byte [] encriptedKey;
+	private byte [] encriptedFile;
+	private byte [] nonEncriptedFile;
+	private byte [] cipherParams;
+
 	public Response(int idRegistro, String selloTemporal, String idPropietario, byte[] SigRD, Certificate CertFirmaS) {
-		this.forFunctionality = 1;
 		this.idRegistro = idRegistro;
 		this.nError=0;
 		this.selloTemporal = selloTemporal;
@@ -22,12 +26,24 @@ public class Response implements Serializable {
 		this.SigRD = SigRD;
 		this.CertFirmaS = CertFirmaS;
 	}
-	
-	public Response(int nError, int forFunctionality) {
-		this.nError=nError;
-		this.forFunctionality = forFunctionality;
+
+	public Response(int idRegistro, String idPropietario, String selloTemporal, byte[] encriptedFile, byte[] cipherParams, byte[] encriptedKey, byte[] SigRD, Certificate CertFirmaS) {
+		this(idRegistro, selloTemporal, idPropietario, SigRD, CertFirmaS);
+		this.isPrivate = true;
+		this.encriptedFile = encriptedFile;
+		this.encriptedKey = encriptedKey;
+		this.cipherParams = cipherParams;
 	}
-	
+	public Response(int idRegistro, String idPropietario, String selloTemporal, byte[] file, byte[] SigRD, Certificate CertFirmaS) {
+		this(idRegistro, selloTemporal, idPropietario, SigRD, CertFirmaS);
+		this.isPrivate = false;
+		this.nonEncriptedFile = file;
+	}
+
+	public Response(int nError) {
+		this.nError=nError;
+	}
+
 	public int getError() {
 		return nError;
 	}
@@ -46,34 +62,38 @@ public class Response implements Serializable {
 	public Certificate getCert() {
 		return CertFirmaS;
 	}
-	public int getForFunctionality() {
-		return forFunctionality;
-	}
 	
+	public byte[] getEncriptedKey() {
+		return encriptedKey;
+	}
+	public byte[] getEncriptedFile() {
+		return encriptedFile;
+	}
+	public byte[] getNonEncriptedFile() {
+		return nonEncriptedFile;
+	}
+	public boolean getIsPrivate() {
+		return isPrivate;
+	}
+	public byte[] getCipherParams() {
+		return cipherParams;
+	}
+
 	public String getErrorMsg() {
 		if (nError == 0) return "Respuesta correcta";
-		
-		switch(forFunctionality) {
-		case 1:
-			switch(nError) {
-			case -1:
-				return "Certificado no valido";
-			case -2:
-				return "Firma incorrecta";
-			default:
-				return "Error no especificado";
-			}
-		case 3:
-			switch(nError) {
-			case -1:
-				return "";
-			case -2:
-				return "";
-			default:
-				return "Error desconocido";
-			}
+		switch(nError) {
+		case -1:
+			return "Certificado no valido";
+		case -2:
+			return "Firma incorrecta";
+		case -3:
+			return "Acceso denegado";
+		case -4:
+			return "Documento no existente";
+		case -5:
+			return "Acceso denegado";
 		default:
-			return "Funcionalidad no establecida en la respuesta";
+			return "Error no especificado";
 		}
 	}
 }
