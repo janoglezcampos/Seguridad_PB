@@ -4,6 +4,7 @@ import common.*;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -11,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -30,6 +32,7 @@ import server.Util;
 public class Util3 {
 	private static String authAlias="clientauth";
 	private static String cipherAlias="clientcipher";
+	private static String signAlias="clientsign";
 	private static String savePath = "/Users/lexy/Desktop/Clases/Seguridad/clientRecoveredFiles/";
 	public static void start(final Socket client2, String idRegistro, String pass_wd) {
 		// TODO Auto-generated method stub
@@ -45,70 +48,83 @@ public class Util3 {
 					out.writeInt(op.getBytes().length);
 					out.write(op.getBytes());
 					out.flush();
-					
+
 					Certificate certificate = Client.getKeyStore().getCertificate(authAlias);
-					byte [] certFirma= certificate.getEncoded();
+					byte [] certAuth= certificate.getEncoded();
 
 					X509Certificate extra= (X509Certificate) certificate ;
 					Principal idPropietario = extra.getIssuerDN();
 					System.out.println("ID PROPIETARIO: "+ idPropietario.toString());
 
-					out.writeInt(certFirma.length);
-					out.write(certFirma);
+					out.writeInt(certAuth.length);
+					out.write(certAuth);
 					out.flush();
 					out.writeInt(idRegistro.getBytes().length);
 					out.write(idRegistro.getBytes());
 					out.flush();
 
-					DataInputStream input= new DataInputStream(client2.getInputStream());
-					FileOutputStream filedef =new FileOutputStream(savePath+"firmaDocumento");
-					filedef.write(input.readNBytes(input.readInt()));
-					filedef.close();
-					FileOutputStream filedef2 =new FileOutputStream(savePath+"idRegistro");
-					filedef2.write(input.readNBytes(input.readInt()));
-					filedef2.close();
-					FileOutputStream filedef3=new FileOutputStream(savePath+"selloTemporal");
-					filedef3.write(input.readNBytes(input.readInt()));
-					filedef3.close();
-					FileOutputStream filedef4=new FileOutputStream(savePath+"firmaSigRD");
-					filedef4.write(input.readNBytes(input.readInt()));
-					filedef4.close();
+					ObjectInputStream input= new ObjectInputStream(client2.getInputStream());
 
-					FileOutputStream filedef6=new FileOutputStream(savePath+"file");
-					String confidencialidad = new String (input.readNBytes(input.readInt()));
-					byte [] file=input.readNBytes(input.readInt());
-					
-					if("PRIVADO".equals(confidencialidad)) {
+					Response response = (Response) input.readObject();
+					byte [] fileContent = null;
+					byte [] SignRDContent;
 
-						byte[] cipherParams = input.readNBytes(input.readInt());
-						byte[] encriptedKey = input.readNBytes(input.readInt());
-						try {
-							filedef6.write(Encription.decriptFilePGP(encriptedKey, file, cipherParams, pass_wd, cipherAlias, Client.getKeyStore()));
-						} catch (Exception e) {
-							System.out.println("Error desencriptando archivo: ");
-							e.printStackTrace();
+					if(response.getError() == 0) {
+						if(Validation.validateCert(response.getCert(), Client.getTrust())) {
+							FileOutputStream file=new FileOutputStream(savePath+"file");
+
+							if(response.getIsPrivate()) {
+								try {
+									file.write(
+											fileContent = Encription.decriptFilePGP(response.getEncriptedKey(), response.getEncriptedFile(), response.getCipherParams(), pass_wd, cipherAlias, Client.getKeyStore()));
+
+								} catch (Exception e) {
+									System.out.println("Error desencriptando archivo: ");
+									e.printStackTrace();
+								}
+							}else {
+								fileContent = response.getNonEncriptedFile();
+							}
+
+							PrivateKey signkey = (PrivateKey) Client.getKeyStore().getKey(signAlias, pass_wd.toCharArray());
+							byte [] firmadoc = Validation.signContent(fileContent, signkey);
+							SignRDContent = getSignRDContent(response.getIdRegistro(),response.getSelloTemporal(), response.getIdPropietario(),fileContent, firmadoc);
+							if(Validation.checkSign(response.getCert(),SignRDContent, response.getSigRD())) {
+								file.write(fileContent);
+								if(Client.checkHash(response.getIdRegistro(), fileContent)) {
+									System.out.println("DOCUMENTO RECUPERADO CORRECTAMENTE");
+								}else{
+									System.out.println("DOCUMENTO ALTERADO POR EL REGISTRADOR");
+								}
+							}else {
+								System.out.println("FALLO DE FIRMA DEL REGISTRADOR");
+							}
+							file.close();
+						}else {
+							System.out.println("Certificado del servidor no valido");
 						}
-					}else {
-						filedef6.write(file);
+					}else{
+						System.out.println(response.getErrorMsg());
 					}
-					
-					filedef6.close();
 
-					BufferedReader input2 = new BufferedReader(new InputStreamReader(client2.getInputStream()));
-					String received = input2.readLine();
-					System.out.println("Received : "+"\n" + received);
-					input.close();
 					out.close();
-
-
-				} catch (IOException | CertificateException | KeyStoreException e) {
+					input.close();
+				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-
 			}
-
-
 		}.start();
+	}
+
+	public static byte[] getSignRDContent(int idRegistro, String selloTemporal,String idPropietario, byte[] nonEncriptedFile, byte[] firmaDoc) throws Exception {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+		outputStream.write(idRegistro);
+		outputStream.write(selloTemporal.getBytes());
+		outputStream.write(idPropietario.toString().getBytes());
+		outputStream.write(nonEncriptedFile);
+		outputStream.write(firmaDoc);
+
+		return outputStream.toByteArray();
 	}
 }
