@@ -50,7 +50,7 @@ public class Util {
 						Path path = Paths.get(ubicacion);
 						byte[] fileContent = Files.readAllBytes(path);
 						if(Validation.validateCert(certFirma, Client.getTrust())) {
-							byte[] SignRDContent = getSignRDContent(res.getIdRegistro(),res.getSelloTemporal(), res.getIdPropietario(), fileContent, message.get(1));
+							byte[] SignRDContent = Validation.getSignRDContent(res.getIdRegistro(),res.getSelloTemporal(), res.getIdPropietario(), fileContent, message.get(1));
 
 							if(Validation.checkSign(certFirma, SignRDContent, res.getSigRD())) {
 								Client.saveHash(res.getIdRegistro(), fileContent);
@@ -79,18 +79,7 @@ public class Util {
 			e.printStackTrace();
 		} 
 	}
-
-	public static byte[] getSignRDContent(int idRegistro, String selloTemporal,String idPropietario, byte[] nonEncriptedFile, byte[] firmaDoc) throws Exception {
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
-		outputStream.write(idRegistro);
-		outputStream.write(selloTemporal.getBytes());
-		outputStream.write(idPropietario.toString().getBytes());
-		outputStream.write(nonEncriptedFile);
-		outputStream.write(firmaDoc);
-
-		return outputStream.toByteArray();
-	}
-
+	
 	/*
 	 Operacion
 	 PRIVADO:
@@ -121,7 +110,7 @@ public class Util {
 
 		if (confidencialidad.equals("PRIVADO")) {
 			PublicKey clavetrust = Client.getTrust().getCertificate(serverCipherAlias).getPublicKey();
-			full = Encription.encript2sendPGP(full, fileContent, clavetrust);
+			full.addAll(Encription.encript2sendPGP(fileContent, clavetrust));
 		}else {
 			full.add(fileContent);
 		}
