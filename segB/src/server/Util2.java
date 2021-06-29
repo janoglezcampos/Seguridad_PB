@@ -19,7 +19,7 @@ public class Util2 {
 	public static void start(Socket aClient) {
 		new Thread() {
 			public void run() {
-				try {
+				try {/*
 					privado.clear();
 					publico.clear();
 					DataInputStream input= new DataInputStream(aClient.getInputStream());
@@ -78,7 +78,7 @@ public class Util2 {
 					}
 					//output.println("\n HAY DOCUMENTOS"); //cambiar
 					output.close();
-
+*/
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
