@@ -21,8 +21,8 @@
 * ~~Validar CertFirmaS (cliente)~~ :white_check_mark:
 * ~~Verificar firma al recibir ok (cliente)~~ :white_check_mark:
 * ~~Guardar hash archivo enviado y asociarlo al idRegistro (cliente)~~ :white_check_mark:
-* * Almacenar todo en un fichero, no en un directorio (server)
-* * Eliminar archivo enviado (cliente)
+* Almacenar todo en un fichero, no en un directorio (server)
+* Eliminar archivo enviado (cliente)
 
 ## Funcionalidad 2:
 * Generar respuestas serverside (server)
