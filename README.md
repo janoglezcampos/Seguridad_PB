@@ -69,6 +69,7 @@ en la respuesta, por lo tanto tambien se ignora si es publico.
 * ~~Computar hash y comparar con el almacenado en Funcionalidad 1 (cliente)~~ :white_check_mark:
 * Enviar nombre del documento (servidor)
 * Guardar con nombre del documento (cliente)
+* Modificar para que cualquiera pueda acceder a los archivos publicos (server)
 
 
 ## Opcional:
