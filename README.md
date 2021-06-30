@@ -1,4 +1,3 @@
-
 # Lista de tareas:
 
 __Problema en el enunciado!__
@@ -75,3 +74,6 @@ en la respuesta, por lo tanto tambien se ignora si es publico.
 ## Opcional:
 * ~~Crear una base de datos, aunque sea txt, y no depender de las listas (para permitir cerrar y reabrir cliente).~~ :white_check_mark:
 * Mejorar codigo, POO
+
+## [Archivos: almacenes y CA](https://drive.google.com/drive/folders/1lCv0Sylmk9a1QR4UhN9tw8FaoDe6kHwd?usp=sharing)
+
