@@ -73,6 +73,14 @@ public class Validation {
 
 		return outputStream.toByteArray();
 	}
-
+	
+	//Dos clientes distintos tienen el mismo issuerDN si su certificado está firmado por la misma CA,
+	//para identificar al propietario es necesario usar el SubejctDN también.
+	public static String getOwner(Certificate cert) {
+		boolean completeDN = false;
+		String issuerDN = ((X509Certificate)cert).getIssuerDN().toString();
+		String subjectDN = ((X509Certificate)cert).getSubjectDN().toString();
+		return (completeDN) ? (issuerDN+subjectDN) : issuerDN;
+	}
 
 }

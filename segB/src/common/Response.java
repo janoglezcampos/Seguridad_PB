@@ -2,6 +2,7 @@ package common;
 
 import java.io.Serializable;
 import java.security.cert.Certificate;
+import java.util.ArrayList;
 
 public class Response implements Serializable {
 	private static final long serialVersionUID = 32L;
@@ -11,12 +12,15 @@ public class Response implements Serializable {
 	private String idPropietario;
 	private byte[] SigRD;
 	private Certificate CertFirmaS;
-	
+
 	private boolean isPrivate;
 	private byte [] encriptedKey;
 	private byte [] encriptedFile;
 	private byte [] nonEncriptedFile;
 	private byte [] cipherParams;
+
+	private ArrayList<String> publicFiles;
+	private ArrayList<String> privateFiles;
 
 	//Respuesta de registro
 	public Response(int idRegistro, String selloTemporal, String idPropietario, byte[] SigRD, Certificate CertFirmaS) {
@@ -42,6 +46,11 @@ public class Response implements Serializable {
 		this.isPrivate = false;
 		this.nonEncriptedFile = file;
 	}
+	//Respuesta de listado
+	public Response(ArrayList<String> publicList, ArrayList<String> privateFiles) {
+		this.publicFiles = publicList;
+		this.privateFiles = publicFiles;
+	}
 
 	public Response(int nError) {
 		this.nError=nError;
@@ -65,7 +74,7 @@ public class Response implements Serializable {
 	public Certificate getCert() {
 		return CertFirmaS;
 	}
-	
+
 	public byte[] getEncriptedKey() {
 		return encriptedKey;
 	}

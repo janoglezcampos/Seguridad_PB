@@ -2,7 +2,11 @@ package server;
 
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.nio.file.Paths;
 import java.security.KeyStore;
@@ -75,6 +79,10 @@ public class DatabaseEntry implements Serializable{
 	public PublicKey getClientPublicKey() {
 		return clientPublicKey;
 	}
+	
+	public String getInfo() {
+		return idRegistro + "|" + idPropietario + "|" + originalFileName + "|" + sello;
+	}
 
 	public DatabaseEntry(int idRegistro, boolean isPrivate, String originalFileName,Certificate certificate, byte[] file, byte[] firmaDoc, KeyStore keystore, String keySignAlias, char[] clave, PublicKey clientPublicKey) throws Exception{
 		this.firmaDoc = firmaDoc;
@@ -115,36 +123,12 @@ public class DatabaseEntry implements Serializable{
 		return dataBaseFileName = (!isPrivate) ? dataBaseFileName : dataBaseFileName+".cif";
 	}
 
-	/*
-	public Response save(String path) throws Exception {
-		String dataBaseFileName = idRegistro+"_"+idPropietario+".sig";
-
-		dataBaseFileName = (!isPrivate) ? dataBaseFileName : dataBaseFileName+".cif";
-		FileOutputStream fos = new FileOutputStream(Paths.get(path, dataBaseFileName).toString());
-		DataOutputStream dos = new DataOutputStream(fos);
-		dos.writeInt(idRegistro);
-		dos.writeInt((isPrivate) ? 1:0);
-		dos.writeInt(firmaDoc.length);
-		dos.write(firmaDoc);
-		dos.writeInt(sello.getBytes().length);
-		dos.write(sello.getBytes());
-		dos.writeInt(bytesfirma.length);
-		dos.write(bytesfirma.length);
-		dos.writeInt(originalFileName.getBytes().length);
-		dos.write(originalFileName.getBytes());
-		dos.writeInt(clientPublicKey.getEncoded().length);
-		dos.write(clientPublicKey.getEncoded());
-		dos.writeInt(content.length);
-		dos.write(content);
-		if(isPrivate) {
-			dos.writeInt(cipherParams.length);
-			dos.write(cipherParams);
-		}
-		fos.close();
-		dos.close();
-		return new Response(idRegistro, sello, idPropietario.toString(), bytesfirma, Server.getKeyStore().getCertificate(signAlias));
+	public static DatabaseEntry recoverEntry(String savePath, String fileName) throws ClassNotFoundException, IOException {
+		FileInputStream fileIn = new FileInputStream(
+				Paths.get(savePath, fileName).toString());
+		ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+		return (DatabaseEntry) objectIn.readObject();
 	}
-	 */
 
 	private static String sello() {
 		Calendar fecha = new GregorianCalendar();
