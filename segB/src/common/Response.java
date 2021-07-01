@@ -47,9 +47,9 @@ public class Response implements Serializable {
 		this.nonEncriptedFile = file;
 	}
 	//Respuesta de listado
-	public Response(ArrayList<String> publicList, ArrayList<String> privateFiles) {
+	public Response(ArrayList<String> publicList, ArrayList<String> privateList) {
 		this.publicFiles = publicList;
-		this.privateFiles = publicFiles;
+		this.privateFiles = privateList;
 	}
 
 	public Response(int nError) {
