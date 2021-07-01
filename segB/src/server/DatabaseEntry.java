@@ -18,7 +18,7 @@ import java.util.GregorianCalendar;
 import common.*;
 
 public class DatabaseEntry implements Serializable{
-	
+
 	private static final long serialVersionUID = 12L;
 	private final String signAlias = "serversign";
 	private byte[] sigRD;
@@ -82,7 +82,7 @@ public class DatabaseEntry implements Serializable{
 		this.isPrivate = isPrivate;
 		this.originalFileName = originalFileName;
 		this.clientPublicKey = clientPublicKey;
-		
+
 		idPropietario = ((X509Certificate)certificate).getIssuerDN().toString();
 
 		this.sello= sello();
@@ -109,12 +109,12 @@ public class DatabaseEntry implements Serializable{
 			return new Response(-10);
 		}
 	}
-	
+
 	public String getFileName() {
 		String dataBaseFileName = idRegistro+"_"+idPropietario+".sig";
 		return dataBaseFileName = (!isPrivate) ? dataBaseFileName : dataBaseFileName+".cif";
 	}
-	
+
 	/*
 	public Response save(String path) throws Exception {
 		String dataBaseFileName = idRegistro+"_"+idPropietario+".sig";
@@ -144,7 +144,7 @@ public class DatabaseEntry implements Serializable{
 		dos.close();
 		return new Response(idRegistro, sello, idPropietario.toString(), bytesfirma, Server.getKeyStore().getCertificate(signAlias));
 	}
-	*/
+	 */
 
 	private static String sello() {
 		Calendar fecha = new GregorianCalendar();
@@ -163,13 +163,15 @@ public class DatabaseEntry implements Serializable{
 
 	public static ArrayList<ArrayList<String>> getFiles(String savePath,String propietario){
 		File[] fileList =new File (savePath).listFiles();
+		boolean onlyPublic = (propietario == null) ? true : false;
+		
 		ArrayList<ArrayList<String>> complete = new ArrayList<ArrayList<String>>();
 		ArrayList<String> privateFiles = new ArrayList<String>();
 		ArrayList<String> publicFiles = new ArrayList<String>();
 		String name;
 		for(File file: fileList){
 			name = file.getName();
-			if(name.endsWith(".cif")) {
+			if(name.endsWith(".cif") && name.contains(propietario) && !onlyPublic) {
 				privateFiles.add(name);
 			}
 			else if(name.endsWith(".sig")) {
@@ -179,5 +181,25 @@ public class DatabaseEntry implements Serializable{
 		complete.add(publicFiles);
 		complete.add(privateFiles);
 		return complete;
+	}
+
+	public static String entryExists(String savePath, int idRegistro){
+		File[] fileList =new File (savePath).listFiles();
+		String sId= Integer.toString(idRegistro);
+		String fileName;
+		for(File file: fileList){
+			fileName=file.getName();
+			if(fileName.startsWith(sId)){
+				return getFileOwner(fileName);
+			}
+		}
+		return null;
+	}
+
+	public static String getFileOwner(String fileName){
+		if(fileName.contains(".sig")){
+			return fileName.substring(fileName.indexOf("_"),fileName.indexOf(".sig"));
+		}
+		return null;
 	}
 }
