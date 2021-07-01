@@ -22,6 +22,9 @@ necesidad de validación de sigRD si el archivo es publico. En el caso del
 hash, en un sistema real tampoco se podría comprobar a menos que se enviase
 en la respuesta, por lo tanto tambien se ignora si es publico.
 
+## General
+* Asignar rutas de guardado y alias de las claves a variables globales en servidor y cliente
+
 ## Hanshake:
 * ~~Mutual handhake~~  :white_check_mark:
 * ~~OCSP~~ :white_check_mark:
