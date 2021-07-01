@@ -20,7 +20,7 @@ public class Util3 {
 					DataInputStream input = new DataInputStream(aClient.getInputStream());
 
 					byte[] certAuth = input.readNBytes(input.readInt());
-					String id_registro = new String(input.readNBytes(input.readInt()));
+					String idRegistro = new String(input.readNBytes(input.readInt()));
 
 					InputStream in = new ByteArrayInputStream(certAuth);
 					CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -42,16 +42,16 @@ public class Util3 {
 
 					// initContador esta preparado para soportar eliminacion de documentos a mano,
 					// pero no esta funcion!!
-					if (Integer.parseInt(id_registro) <= Server.getContador()) {
+					if (DatabaseEntry.entryExists(SAVEPATH,Integer.parseInt(idRegistro))!=null) {
 						for (String fileName : privado) {
-							if (esprivado = fileName.startsWith(id_registro)) {
+							if (esprivado = fileName.startsWith(idRegistro)) {
 								fileToRetrieve = fileName;
 							}
 						}
 
 						if (esprivado) {
 							if (Validation.validateCert(certificate, Server.getTrust())) {
-								if ((id_registro + "_" + idPropietario + ".sig.cif").equals(fileToRetrieve)) {
+								if ((idRegistro + "_" + idPropietario + ".sig.cif").equals(fileToRetrieve)) {
 									System.out.println("Propietario correcto, recuperando archivo: " + fileToRetrieve);
 
 									ArrayList<byte[]> encripted2send = new ArrayList<byte[]>();
@@ -66,19 +66,18 @@ public class Util3 {
 
 									encripted2send = Encription.encript2sendPGP(decriptedFile,
 											dataEntry.getClientPublicKey());
-									res = new Response(Integer.parseInt(id_registro), idPropietario,
+									res = new Response(Integer.parseInt(idRegistro), idPropietario,
 											dataEntry.getSello(), encripted2send.get(0), encripted2send.get(1),
 											encripted2send.get(2), dataEntry.getSigRD(), serverCertSign);
 								} else {
 									res = new Response(-3);
 								}
 							} else {
-
 								res = new Response(-1);
 							}
 						} else {
 							for (String fileName : publico) {
-								if (fileName.startsWith(id_registro)) {
+								if (fileName.startsWith(idRegistro)) {
 									fileToRetrieve = fileName;
 								}
 							}
@@ -88,7 +87,7 @@ public class Util3 {
 							ObjectInputStream objectIn = new ObjectInputStream(fileIn);
 							DatabaseEntry dataEntry = (DatabaseEntry) objectIn.readObject();
 
-							res = new Response(Integer.parseInt(id_registro), idPropietario, dataEntry.getSello(),
+							res = new Response(Integer.parseInt(idRegistro), idPropietario, dataEntry.getSello(),
 									dataEntry.getContent(), dataEntry.getSigRD(), serverCertSign);
 						}
 					} else {
