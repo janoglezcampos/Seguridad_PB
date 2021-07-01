@@ -18,9 +18,26 @@ public class Response implements Serializable {
 	private byte [] encriptedFile;
 	private byte [] nonEncriptedFile;
 	private byte [] cipherParams;
-
+	
 	private ArrayList<String> publicFiles;
 	private ArrayList<String> privateFiles;
+
+	public ArrayList<String> getPublicFiles() {
+		return publicFiles;
+	}
+
+	public void setPublicFiles(ArrayList<String> publicFiles) {
+		this.publicFiles = publicFiles;
+	}
+
+	public ArrayList<String> getPrivateFiles() {
+		return privateFiles;
+	}
+
+	public void setPrivateFiles(ArrayList<String> privateFiles) {
+		this.privateFiles = privateFiles;
+	}
+
 
 	//Respuesta de registro
 	public Response(int idRegistro, String selloTemporal, String idPropietario, byte[] SigRD, Certificate CertFirmaS) {
@@ -50,6 +67,7 @@ public class Response implements Serializable {
 	public Response(ArrayList<String> publicList, ArrayList<String> privateList) {
 		this.publicFiles = publicList;
 		this.privateFiles = privateList;
+		this.nError=0;
 	}
 
 	public Response(int nError) {
@@ -104,6 +122,8 @@ public class Response implements Serializable {
 			return "Documento no existente";
 		case -5:
 			return "Acceso denegado";
+		case -6:
+			return "Confidencialidad incorrecta";
 		default:
 			return "Error no especificado";
 		}

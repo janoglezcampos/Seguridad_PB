@@ -11,6 +11,7 @@ import javax.net.ssl.*;
 
 
 //Arguments:
+
 // /Users/lexy/Desktop/Clases/Seguridad/almacenes/keystoreClient.jceks
 // /Users/lexy/Desktop/Clases/Seguridad/almacenes/truststoreClient.jceks
 public class Client {
@@ -21,13 +22,13 @@ public class Client {
 	private static boolean ocspEnable = true; //Habilita ocsp stapling
 	private static boolean ocspClientEnable = false; //Habilita ocsp client-side si ocsp stapling está habilitado
 	
-	private static String sentDatabase = "/Users/lexy/Desktop/Clases/Seguridad/sentDatabase.txt";
+	private static String sentDatabase = "C:\\Users\\usuario\\Desktop\\SEG-LEXY/sentDatabase.txt";
 
 	public static void main(String[] args)throws IOException, KeyManagementException, UnrecoverableKeyException, KeyStoreException, SignatureException {
 		System.out.println(System.getProperty("java.version"));
 
 		if (args.length!=2) {
-			System.out.println("Número de parametros incorrecto, introduzca keyStore y trustStore");
+			System.out.println("Numero de parametros incorrecto, introduzca keyStore y trustStore");
 			System.exit(0);
 		}
 
@@ -78,8 +79,6 @@ public class Client {
 			case "2": 
 				System.out.println("Introduzca el tipo de confidencialidad (PRIV o PUB)");
 				String confidencialidad2= reader.readLine();
-				System.out.println("Introduzca el CertAuth");
-				String cert_listar= reader.readLine();
 				System.out.println("Introduzca a contraseña del keyStore");
 				String passwd_key2=reader.readLine();
 				try {
@@ -91,7 +90,7 @@ public class Client {
 					e.printStackTrace();
 				}
 
-				Util2.start(conexion(),confidencialidad2,cert_listar);
+				Util2.start(conexion(),confidencialidad2);
 
 
 				control=1;
@@ -101,8 +100,6 @@ public class Client {
 				System.out.println("Introduzca el idRegistro ");
 				String idRegistro= reader.readLine();
 				//Es necesario? Creo que no
-				System.out.println("Introduzca el CertAuth");
-				String cert_rec= reader.readLine();
 				System.out.println("Introduzca a contraseña del keyStore");
 				String passwd_key3=reader.readLine();
 				try {
@@ -232,7 +229,7 @@ public class Client {
 		//trustedStore.load(new FileInputStream("C:\\Users\\usuario\\Desktop\\alamcenes/clientTrustedCerts.jks"), "clientpass".toCharArray());
 		trustedStore.load(new FileInputStream(args[1]), passwd_key.toCharArray()); //supuestamente no hay que poner contrase�a es la misma pero no se deberia i dont know 
 		trust=trustedStore;
-		System.out.println("Tamaño del trust  "+trust.size());
+		System.out.println("Tama�o del trust  "+trust.size());
 
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
 

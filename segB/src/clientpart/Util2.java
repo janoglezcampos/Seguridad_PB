@@ -1,38 +1,25 @@
 package clientpart;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.Socket;
-import java.nio.file.Files;
-import java.security.InvalidKeyException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Principal;
-import java.security.SignatureException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.Enumeration;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.net.ssl.SSLSocket;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.Socket;
+import java.security.KeyStoreException;
+import java.security.Principal;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+
+
+
+import common.Response;
 
 public class Util2 {
 
 	private static String authAlias="clientAuth";
-	public static void start(final Socket client2, String confidencialidad2, String cert_listar) {
+	public static void start(final Socket client2, String confidencialidad2) {
 		// TODO Auto-generated method stub
 
 		System.out.println("client start SEND ");
@@ -48,8 +35,7 @@ public class Util2 {
 					out.flush();
 					
 					Certificate certificate = Client.getKeyStore().getCertificate(authAlias);
-					byte [] certFirma= certificate.getEncoded();
-
+					//byte [] certFirma= certificate.getEncoded();
 					X509Certificate extra= (X509Certificate) certificate ;
 					Principal idPropietario = extra.getIssuerDN();
 					//System.out.println("ID PROPIETARIO: "+ idPropietario.toString());
@@ -61,20 +47,40 @@ public class Util2 {
 					out.write(confidencialidad2.getBytes());
 					out.flush();
 
-					BufferedReader input = new BufferedReader(new InputStreamReader(client2.getInputStream()));
-					String received = input.readLine();
-					System.out.println("ID PROPIETARIO : "+"\n" + received);
-					received = input.readLine();
-					System.out.println("ID REGISTRO : "+"\n" + received);
-					received = input.readLine();
-					System.out.println("SELLO TEMPORAL : "+"\n" + received);
-					received = input.readLine();
-					System.out.println("NOMBRE DEL DOCUMENTO: "+"\n" + received);
-
+					DataInputStream input = new DataInputStream(client2.getInputStream());
+					ObjectInputStream input_obj= new ObjectInputStream(input);
+					
+					Response resp =(Response) input_obj.readObject();
+					
+					if (resp.getError()==0) {
+						if(confidencialidad2.equals("PRIV")) {
+							System.out.println("Documentos en privado:");
+							for(String priv: resp.getPrivateFiles()) {
+								System.out.println(priv);
+								
+							}
+						}
+						System.out.println("Documentos en publico:");
+						for(String pub: resp.getPublicFiles()) {
+							System.out.println(pub);
+							
+						}	
+						
+					}else {
+						System.out.println(resp.getErrorMsg());
+						
+						
+					}
+			
+				
 					input.close();
+					input_obj.close();
 					out.close();
 
-				} catch (IOException | CertificateException | KeyStoreException e) {
+				} catch (IOException | KeyStoreException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
