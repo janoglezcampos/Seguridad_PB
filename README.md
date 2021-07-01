@@ -24,6 +24,7 @@ en la respuesta, por lo tanto tambien se ignora si es publico.
 
 ## General
 * Asignar rutas de guardado y alias de las claves a variables globales en servidor y cliente
+* Obtener tipo de algoritmo de la clave simetrica almacenana en keystore del servidor
 
 ## Hanshake:
 * ~~Mutual handhake~~  :white_check_mark:
