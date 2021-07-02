@@ -19,7 +19,6 @@ public class Util {
 	public static final String SERVER_CIPHER_ALIAS = Client.SERVER_CIPHER_ALIAS;
 
 	public static void sendFile(final Socket clientSock, String confidencialidad, String ubicacion,String passwd_key){
-		System.out.println("Client start SEND ");
 		try {
 			if (confidencialidad.equals("PRIVADO")||confidencialidad.equals("PUBLICO")) {
 				
