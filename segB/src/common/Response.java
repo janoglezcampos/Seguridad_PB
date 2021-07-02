@@ -18,9 +18,10 @@ public class Response implements Serializable {
 	private byte [] encriptedFile;
 	private byte [] nonEncriptedFile;
 	private byte [] cipherParams;
-
-	private ArrayList<String> publicFiles;
-	private ArrayList<String> privateFiles;
+	
+	private String fileName;
+	
+	private ArrayList<String> fileList;
 
 	//Respuesta de registro
 	public Response(int idRegistro, String selloTemporal, String idPropietario, byte[] SigRD, Certificate CertFirmaS) {
@@ -33,23 +34,26 @@ public class Response implements Serializable {
 	}
 
 	//Respuesta de recuperacion de archivo privado
-	public Response(int idRegistro, String idPropietario, String selloTemporal, byte[] encriptedFile, byte[] cipherParams, byte[] encriptedKey, byte[] SigRD, Certificate CertFirmaS) {
+	public Response(int idRegistro, String idPropietario, String fileName, String selloTemporal, byte[] encriptedFile, byte[] cipherParams, byte[] encriptedKey, byte[] SigRD, Certificate CertFirmaS) {
 		this(idRegistro, selloTemporal, idPropietario, SigRD, CertFirmaS);
 		this.isPrivate = true;
 		this.encriptedFile = encriptedFile;
 		this.encriptedKey = encriptedKey;
 		this.cipherParams = cipherParams;
+		this.fileName= fileName;
 	}
 	//Respuesta de recuperacion de archivo publico
-	public Response(int idRegistro, String idPropietario, String selloTemporal, byte[] file, byte[] SigRD, Certificate CertFirmaS) {
+	public Response(int idRegistro, String idPropietario, String fileName, String selloTemporal, byte[] file, byte[] SigRD, Certificate CertFirmaS) {
 		this(idRegistro, selloTemporal, idPropietario, SigRD, CertFirmaS);
+		System.out.println("fileName");
 		this.isPrivate = false;
 		this.nonEncriptedFile = file;
+		this.fileName= fileName;
 	}
 	//Respuesta de listado
-	public Response(ArrayList<String> publicList, ArrayList<String> privateList) {
-		this.publicFiles = publicList;
-		this.privateFiles = privateList;
+	public Response(ArrayList<String> list) {
+		this.fileList = list;
+		this.nError=0;
 	}
 
 	public Response(int nError) {
@@ -89,6 +93,12 @@ public class Response implements Serializable {
 	}
 	public byte[] getCipherParams() {
 		return cipherParams;
+	}
+	public String getFileName() {
+		return fileName;
+	}
+	public ArrayList<String> getFileList() {
+		return fileList;
 	}
 
 	public String getErrorMsg() {

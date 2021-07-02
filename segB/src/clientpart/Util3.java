@@ -6,13 +6,12 @@ import java.io.*;
 import java.net.Socket;
 import java.security.*;
 import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
 
 public class Util3 {
-	private static String authAlias = "clientauth";
-	private static String cipherAlias = "clientcipher";
-	private static String signAlias = "clientsign";
-	private static String savePath = "/Users/lexy/Desktop/Clases/Seguridad/clientRecoveredFiles/";
+	private static final String AUTH_ALIAS = Client.CIPHER_ALIAS;
+	private static final String CIPHER_ALIAS = Client.CIPHER_ALIAS;
+	private static final String SIGN_ALIAS = Client.SIGN_ALIAS;
+	private static final String SAVE_PATH = Client.SAVE_PATH;
 
 	public static void start(final Socket client2, String idRegistro, String pass_wd) {
 		// TODO Auto-generated method stub
@@ -21,20 +20,19 @@ public class Util3 {
 		new Thread() {
 			public void run() {
 				try {
+					
+					//No se envía el tipo, publico o privado porque ya lo sabe el servido¿?
 					String op = "3";
 					DataOutputStream out;
+					System.out.println("Enviada operación");
 
 					out = new DataOutputStream(client2.getOutputStream());
 					out.writeInt(op.getBytes().length);
 					out.write(op.getBytes());
 					out.flush();
 
-					Certificate certificate = Client.getKeyStore().getCertificate(authAlias);
+					Certificate certificate = Client.getKeyStore().getCertificate(AUTH_ALIAS);
 					byte[] certAuth = certificate.getEncoded();
-
-					X509Certificate extra = (X509Certificate) certificate;
-					Principal idPropietario = extra.getIssuerDN();
-					System.out.println("ID PROPIETARIO: " + idPropietario.toString());
 
 					out.writeInt(certAuth.length);
 					out.write(certAuth);
@@ -42,22 +40,22 @@ public class Util3 {
 					out.writeInt(idRegistro.getBytes().length);
 					out.write(idRegistro.getBytes());
 					out.flush();
-
+					System.out.println("Enviada operación");
 					ObjectInputStream input = new ObjectInputStream(client2.getInputStream());
-
+					System.out.println("Rescibida respuesta");
 					Response response = (Response) input.readObject();
 					byte[] fileContent = null;
 					byte[] SignRDContent;
 
 					if (response.getError() == 0) {
 						if (Validation.validateCert(response.getCert(), Client.getTrust())) {
-							FileOutputStream file = new FileOutputStream(savePath + "file");
+							FileOutputStream file = new FileOutputStream(SAVE_PATH + response.getFileName());
 
 							if (response.getIsPrivate()) {
 								try {
 									file.write(fileContent = Encription.decriptFilePGP(response.getEncriptedKey(),
 											response.getEncriptedFile(), response.getCipherParams(), pass_wd,
-											cipherAlias, Client.getKeyStore()));
+											CIPHER_ALIAS, Client.getKeyStore()));
 
 								} catch (Exception e) {
 									System.out.println("Error desencriptando archivo: ");
@@ -67,7 +65,7 @@ public class Util3 {
 								fileContent = response.getNonEncriptedFile();
 							}
 
-							PrivateKey signkey = (PrivateKey) Client.getKeyStore().getKey(signAlias,
+							PrivateKey signkey = (PrivateKey) Client.getKeyStore().getKey(SIGN_ALIAS,
 									pass_wd.toCharArray());
 
 							// Si se comprueba
@@ -96,9 +94,8 @@ public class Util3 {
 							 * hash, en un sistema real tampoco se podría comprobar a menos que se enviase
 							 * en la respuesta, por lo tanto tambien se ignora si es publico.
 							 */
-
 							if (Validation.checkSign(response.getCert(), SignRDContent, response.getSigRD())
-									|| !response.getIsPrivate()) {
+									|| !response.getIsPrivate() ) {
 								file.write(fileContent);
 								if (Client.checkHash(response.getIdRegistro(), fileContent)
 										|| !response.getIsPrivate()) {

@@ -1,10 +1,8 @@
 package server;
 
-import java.io.DataOutputStream;
+
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -36,6 +34,22 @@ public class DatabaseEntry implements Serializable{
 	private String originalFileName;
 	private PublicKey clientPublicKey;
 
+	public DatabaseEntry(int idRegistro, boolean isPrivate, String originalFileName,Certificate certificate, byte[] file, byte[] firmaDoc, KeyStore keystore, String keySignAlias, char[] clave, PublicKey clientPublicKey) throws Exception{
+		this.firmaDoc = firmaDoc;
+		this.idRegistro = idRegistro;
+		this.isPrivate = isPrivate;
+		this.originalFileName = originalFileName;
+		this.clientPublicKey = clientPublicKey;
+
+		idPropietario = ((X509Certificate)certificate).getIssuerDN().toString();
+
+		this.sello= sello();
+
+		byte conjunto[] = Validation.getSignRDContent(idRegistro, sello(), idPropietario.toString(), file, firmaDoc);
+
+		sigRD = Validation.signContent(conjunto, (PrivateKey) keystore.getKey(keySignAlias, clave));
+	}
+	
 	public String getSignAlias() {
 		return signAlias;
 	}
@@ -84,31 +98,6 @@ public class DatabaseEntry implements Serializable{
 		return idRegistro + "|" + idPropietario + "|" + originalFileName + "|" + sello;
 	}
 
-	public DatabaseEntry(int idRegistro, boolean isPrivate, String originalFileName,Certificate certificate, byte[] file, byte[] firmaDoc, KeyStore keystore, String keySignAlias, char[] clave, PublicKey clientPublicKey) throws Exception{
-		this.firmaDoc = firmaDoc;
-		this.idRegistro = idRegistro;
-		this.isPrivate = isPrivate;
-		this.originalFileName = originalFileName;
-		this.clientPublicKey = clientPublicKey;
-
-		idPropietario = ((X509Certificate)certificate).getIssuerDN().toString();
-
-		this.sello= sello();
-
-		byte conjunto[] = Validation.getSignRDContent(idRegistro, sello(), idPropietario.toString(), file, firmaDoc);
-
-		sigRD = Validation.signContent(conjunto, (PrivateKey) keystore.getKey(keySignAlias, clave));
-	}
-
-	public void addFileContent(byte[] content, byte[] cipherParams) {
-		this.content = content;
-		this.cipherParams = cipherParams;
-	}
-
-	public void addFileContent(byte[] content) {
-		this.content = content;
-	}
-
 	public Response getResponse(KeyStore keystore, String signAlias) {
 		try {
 			return new Response(idRegistro, sello, idPropietario.toString(), sigRD, keystore.getCertificate(signAlias));
@@ -123,6 +112,17 @@ public class DatabaseEntry implements Serializable{
 		return dataBaseFileName = (!isPrivate) ? dataBaseFileName : dataBaseFileName+".cif";
 	}
 
+	public void addFileContent(byte[] content, byte[] cipherParams) {
+		this.content = content;
+		this.cipherParams = cipherParams;
+	}
+
+	public void addFileContent(byte[] content) {
+		this.content = content;
+	}
+
+
+
 	public static DatabaseEntry recoverEntry(String savePath, String fileName) throws ClassNotFoundException, IOException {
 		FileInputStream fileIn = new FileInputStream(
 				Paths.get(savePath, fileName).toString());
@@ -130,7 +130,7 @@ public class DatabaseEntry implements Serializable{
 		return (DatabaseEntry) objectIn.readObject();
 	}
 
-	private static String sello() {
+	private String sello() {
 		Calendar fecha = new GregorianCalendar();
 
 		int anho = fecha.get(Calendar.YEAR);
@@ -166,24 +166,28 @@ public class DatabaseEntry implements Serializable{
 		complete.add(privateFiles);
 		return complete;
 	}
-
-	public static String entryExists(String savePath, int idRegistro){
+	
+	/**
+	 * Returns the owner of the file taking
+	 * @param savePath
+	 * @param idRegistro
+	 * @return owner if private, PUB if public or null if the file doesn't exists
+	 */
+	public static String getOwnerByID(String savePath, int idRegistro){
 		File[] fileList =new File (savePath).listFiles();
 		String sId= Integer.toString(idRegistro);
 		String fileName;
 		for(File file: fileList){
 			fileName=file.getName();
 			if(fileName.startsWith(sId)){
-				return getFileOwner(fileName);
+				if(fileName.contains(".cif")) {
+					return fileName.substring(fileName.indexOf("_"),fileName.indexOf(".sig"));
+				}else {
+					return "PUB";
+				}
 			}
 		}
-		return null;
+		return "";
 	}
 
-	public static String getFileOwner(String fileName){
-		if(fileName.contains(".sig")){
-			return fileName.substring(fileName.indexOf("_"),fileName.indexOf(".sig"));
-		}
-		return null;
-	}
 }

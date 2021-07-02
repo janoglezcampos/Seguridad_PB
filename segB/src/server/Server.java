@@ -13,22 +13,26 @@ import javax.net.ssl.*;
 //serverpass
 //RC2
 public class Server {
+	public static final int SERVER_PORT = 443;
+	
 	public static final String SAVEPATH="/Users/lexy/Desktop/Clases/Seguridad/serverSavedFiles/";
 
 	public static final String CIPHERALIAS ="serverCipher";
 	public static final String SIGNALIAS="serverSign";
+	public static final String AUTHALIAS="serverauth";
 	public static final String SECRETKEYALIAS = "dataenckey";
 	
 	private static TrustManager[] trustManagers;
 	private static KeyManager[] keyManagers ;
 	private static KeyStore trust;
 	private static KeyStore key;
+	
 	private static int contador;
 	private static boolean ocspEnable = true;
-	private static String serverAuthCert = "serverauth";
 	
 	private static void initContador() {
 		File[] fileList =new File (SAVEPATH).listFiles();
+		/*
 		String fileName;
 		int lastCounter=0;
 		int idRegistro = 0;
@@ -39,7 +43,8 @@ public class Server {
 				if(idRegistro>lastCounter) lastCounter = idRegistro;
 			}
 		}
-		contador = lastCounter+1;
+		*/
+		contador = fileList.length;
 	}
 	
 	public static int getContador() {
@@ -105,20 +110,20 @@ public class Server {
 
         Security.setProperty("jdk.tls.disabledAlgorithms", "");
 		store(keyStorePath,trustStorePath,password);
-		int port=443;
 
 
 		SSLContext sc = SSLContext.getInstance("TLS");
 		final X509KeyManager origKm = (X509KeyManager)keyManagers[0];
-		X509KeyManager km = new CustomKeyManager(serverAuthCert, origKm);
+		X509KeyManager km = new CustomKeyManager(AUTHALIAS, origKm);
 		sc.init(new KeyManager[] { km }, trustManagers, null);
 		
 		SSLServerSocketFactory sslssf = new CustomizedServerSocketFactory(sc,
                 servParams.protocols, servParams.ciphers);
 
-		//SSLServerSocketFactory ssf = sc.getServerSocketFactory();
-		//ServerSocket serverSocket1 = ssf.createServerSocket(port);
-		ServerSocket serverSocket1 = (SSLServerSocket) sslssf.createServerSocket(port);
+		SSLServerSocketFactory ssf = sc.getServerSocketFactory();
+		ServerSocket serverSocket1 = ssf.createServerSocket(SERVER_PORT);
+		//ServerSocket serverSocket1 = (SSLServerSocket) sslssf.createServerSocket(SERVER_PORT);
+		((SSLServerSocket)serverSocket1).setEnabledCipherSuites(((SSLServerSocket)serverSocket1).getSupportedCipherSuites());
 		((SSLServerSocket)serverSocket1).setNeedClientAuth(true);
 		//((SSLServerSocket) serverSocket1).setEnabledProtocols(protocols);
 		System.out.println("Esperando conexión... (OCSP habilitado: "+ System.getProperty("jdk.tls.server.enableStatusRequestExtension") +")");
@@ -295,7 +300,7 @@ public class Server {
     }
         
 
-	//Modificando chooseServerAlias podemos definir SIEMPRE que certificado enviamos, así podemos asegurar que la comprobación ocsp se hace
+	//Modificando CustomKeyManager podemos definir SIEMPRE que certificado enviamos, así podemos asegurar que la comprobación ocsp se hace
 	//sobre el certificado que queremos
 	static class CustomKeyManager implements X509KeyManager{
 		

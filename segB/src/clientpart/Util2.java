@@ -1,45 +1,24 @@
 package clientpart;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+
+
+import java.io.*;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.security.InvalidKeyException;
-import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Principal;
-import java.security.SignatureException;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.Enumeration;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.net.ssl.SSLSocket;
+import common.Response;
 
 public class Util2 {
-
-	private static String authAlias="clientAuth";
-	public static void start(final Socket client2, String confidencialidad2, String cert_listar) {
+	private static final String AUTH_ALIAS =Client.AUTH_ALIAS;
+	public static void start(final Socket client2, String confidencialidad2) {
 		// TODO Auto-generated method stub
 
-		System.out.println("client start SEND ");
 		new Thread() {
 			public void run() {
 				try { 
-					String op = "2"; 
+					String op = "2";
 					DataOutputStream out;
 
 					out = new DataOutputStream(client2.getOutputStream());
@@ -47,34 +26,53 @@ public class Util2 {
 					out.write(op.getBytes());
 					out.flush();
 					
-					Certificate certificate = Client.getKeyStore().getCertificate(authAlias);
-					byte [] certFirma= certificate.getEncoded();
+					Certificate certificate = Client.getKeyStore().getCertificate(AUTH_ALIAS);
+					byte[] certBytes;
+					try {
+						certBytes = certificate.getEncoded();
+						out.writeInt(certBytes.length);
+						out.write(certBytes);
+						out.flush();
+					} catch (CertificateEncodingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return;
+					}
 
-					X509Certificate extra= (X509Certificate) certificate ;
-					Principal idPropietario = extra.getIssuerDN();
-					//System.out.println("ID PROPIETARIO: "+ idPropietario.toString());
-
-					out.writeInt(idPropietario.toString().getBytes().length);
-					out.write(idPropietario.toString().getBytes());
-					out.flush();
 					out.writeInt(confidencialidad2.getBytes().length);
 					out.write(confidencialidad2.getBytes());
 					out.flush();
 
-					BufferedReader input = new BufferedReader(new InputStreamReader(client2.getInputStream()));
-					String received = input.readLine();
-					System.out.println("ID PROPIETARIO : "+"\n" + received);
-					received = input.readLine();
-					System.out.println("ID REGISTRO : "+"\n" + received);
-					received = input.readLine();
-					System.out.println("SELLO TEMPORAL : "+"\n" + received);
-					received = input.readLine();
-					System.out.println("NOMBRE DEL DOCUMENTO: "+"\n" + received);
-
+					DataInputStream input = new DataInputStream(client2.getInputStream());
+					ObjectInputStream input_obj= new ObjectInputStream(input);
+					
+					Response resp =(Response) input_obj.readObject();
+					
+					
+					String format = "%-30s%s%n";
+					String fieldName[] = {"ID de registro: ", "ID de propietario: ", "Nombre del documento: ", "Fecha:"};
+					if (resp.getError()==0) {
+						for(String info:resp.getFileList()) {
+							
+							for(int i = 0; i < info.split("\\|").length; i++) 
+								System.out.printf(format, fieldName[i], info.split("\\|")[i]);
+							System.out.println();
+						}
+								
+					}else {
+						System.out.println(resp.getErrorMsg());
+						
+						
+					}
+			
 					input.close();
+					input_obj.close();
 					out.close();
 
-				} catch (IOException | CertificateException | KeyStoreException e) {
+				} catch (IOException | KeyStoreException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
