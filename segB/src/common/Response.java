@@ -40,12 +40,15 @@ public class Response implements Serializable {
 		this.encriptedFile = encriptedFile;
 		this.encriptedKey = encriptedKey;
 		this.cipherParams = cipherParams;
+		this.fileName= fileName;
 	}
 	//Respuesta de recuperacion de archivo publico
 	public Response(int idRegistro, String idPropietario, String fileName, String selloTemporal, byte[] file, byte[] SigRD, Certificate CertFirmaS) {
 		this(idRegistro, selloTemporal, idPropietario, SigRD, CertFirmaS);
+		System.out.println("fileName");
 		this.isPrivate = false;
 		this.nonEncriptedFile = file;
+		this.fileName= fileName;
 	}
 	//Respuesta de listado
 	public Response(ArrayList<String> list) {

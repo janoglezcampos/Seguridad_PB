@@ -49,12 +49,15 @@ public class Util2 {
 					Response resp =(Response) input_obj.readObject();
 					
 					
-					String format = "%-20s%s%n";
+					String format = "%-30s%s%n";
 					String fieldName[] = {"ID de registro: ", "ID de propietario: ", "Nombre del documento: ", "Fecha:"};
 					if (resp.getError()==0) {
-						for(String info:resp.getFileList())
-							for(int i = 0; i < info.split("|").length; i++) 
-								System.out.printf(format, fieldName[i], info.split("|")[i]);
+						for(String info:resp.getFileList()) {
+							
+							for(int i = 0; i < info.split("\\|").length; i++) 
+								System.out.printf(format, fieldName[i], info.split("\\|")[i]);
+							System.out.println();
+						}
 								
 					}else {
 						System.out.println(resp.getErrorMsg());

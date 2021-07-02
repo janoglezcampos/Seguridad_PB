@@ -50,8 +50,7 @@ public class Client {
 		}
 	}
 
-	public static void start(String [] args) throws IOException, KeyManagementException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnrecoverableKeyException, KeyStoreException, SignatureException {
-		System.out.println ("\n****************************************************************************");	
+	public static void start(String [] args) throws IOException, KeyManagementException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, UnrecoverableKeyException, KeyStoreException, SignatureException {		System.out.println ("\n****************************************************************************");	
 		System.out.println   ("**                                                                        **");
 		System.out.println   ("**    Terminal de acceso al sistema de almacenamiento de archivos seguro  **");
 		System.out.println   ("**                                                                        **");
@@ -112,8 +111,9 @@ public class Client {
 				String passwd_key3=reader.readLine();
 				try {
 					loadStores(args,passwd_key3);
-				} catch (Exception e) {
+
 					Util3.start(conexion(),idRegistro,passwd_key3);
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				control=1;

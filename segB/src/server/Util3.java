@@ -50,6 +50,7 @@ public class Util3 {
 						}
 
 						dataEntry = DatabaseEntry.recoverEntry(SAVEPATH, fileToRetrieve);
+						System.out.println("Enviando archivo " + dataEntry.getOriginalFileName());
 
 						res = new Response(Integer.parseInt(idRegistro), idPropietario, dataEntry.getOriginalFileName(),dataEntry.getSello(),
 								dataEntry.getContent(), dataEntry.getSigRD(), serverCertSign);

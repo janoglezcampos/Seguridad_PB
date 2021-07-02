@@ -54,6 +54,7 @@ public class Util {
 					Certificate cipherCert = cf.generateCertificate(cipherStream);
 
 					String originalFileName = new String(input.readNBytes(input.readInt()));
+					System.out.println("Nombre: "+originalFileName);
 
 					System.out.println("Comprobando firma");
 

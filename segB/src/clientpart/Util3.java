@@ -20,10 +20,11 @@ public class Util3 {
 		new Thread() {
 			public void run() {
 				try {
-
+					
 					//No se envía el tipo, publico o privado porque ya lo sabe el servido¿?
 					String op = "3";
 					DataOutputStream out;
+					System.out.println("Enviada operación");
 
 					out = new DataOutputStream(client2.getOutputStream());
 					out.writeInt(op.getBytes().length);
@@ -39,9 +40,9 @@ public class Util3 {
 					out.writeInt(idRegistro.getBytes().length);
 					out.write(idRegistro.getBytes());
 					out.flush();
-
+					System.out.println("Enviada operación");
 					ObjectInputStream input = new ObjectInputStream(client2.getInputStream());
-
+					System.out.println("Rescibida respuesta");
 					Response response = (Response) input.readObject();
 					byte[] fileContent = null;
 					byte[] SignRDContent;
