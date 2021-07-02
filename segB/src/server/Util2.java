@@ -1,89 +1,65 @@
 package server;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import common.Response;
-
-
+import common.Validation;
 
 public class Util2 {
-
-	static ArrayList <String> privado = new ArrayList <String>();
-	static ArrayList <String> publico = new ArrayList <String>();
-	
-	
-	
-	private static String savePath="C:\\Users\\usuario\\Desktop\\SEG-LEXY/serverSavedFiles/";
+	private static String savePath = Server.SAVEPATH;
 
 	public static void start(Socket aClient) {
 		new Thread() {
 			public void run() {
 				try {
-					DatabaseEntry data;
-					Response resp;
-					DataInputStream input= new DataInputStream(aClient.getInputStream());
-					String id_Propetario= new String (input.readNBytes(input.readInt()));
-					String confidencialidad=new String(input.readNBytes(input.readInt()));
-					ArrayList<ArrayList<String>> complete = new ArrayList<ArrayList<String>>();
-					
-					privado.clear();
-					publico.clear();
-					
-					complete=DatabaseEntry.getFiles(savePath, id_Propetario);
+					DataInputStream input = new DataInputStream(aClient.getInputStream());
+					byte[] certAuth = input.readNBytes(input.readInt());
 
+					InputStream inCert = new ByteArrayInputStream(certAuth);
+					CertificateFactory cf = CertificateFactory.getInstance("X.509");
+					Certificate certificate = cf.generateCertificate(inCert);
+
+					String idPropietario = Validation.getIdentity(certificate);
+					
 					DataOutputStream out = new DataOutputStream(aClient.getOutputStream());
-					ObjectOutputStream out_obj= new ObjectOutputStream(out);
-					
-					//contains con cada elemento y hacer el .flush
+					ObjectOutputStream out_obj = new ObjectOutputStream(out);
 
-					if (confidencialidad.equals("PUB")|| confidencialidad.equals("PRIV")) {     
+					if (Validation.validateCert(certificate, Server.getTrust())) {
+
+
+						String confidencialidad = new String(input.readNBytes(input.readInt()));
+						ArrayList<ArrayList<String>> complete;
+
+						ArrayList<String> listToSend = new ArrayList<String>();
+						complete=DatabaseEntry.getFiles(savePath, idPropietario);
+
 						if (confidencialidad.equals("PRIV")) {
-							System.out.println("EL usuario tiene"+complete.get(1).size() +"documentos en privado");
-							for (String file: complete.get(1)) {
-								
-									data=DatabaseEntry.recoverEntry(savePath,file);
-									privado.add(data.getInfo());	
-									
-							}
-							
-							System.out.println("Hay "+complete.get(0).size() +"documentos en público");
-							for (String file: complete.get(0)) {
-								
-									data=DatabaseEntry.recoverEntry(savePath,file);
-									publico.add(data.getInfo());	
-									
-							}
-							
-							resp=new Response(publico, privado);
-							out_obj.writeObject(resp);
-			
-						}
-						else if (confidencialidad.equals("PUB")) {
-							
-							System.out.println("Hay "+complete.get(0).size() +"documentos en público");
-							for (String file: complete.get(0)) {
-								
-								data=DatabaseEntry.recoverEntry(savePath,file);
-								publico.add(data.getInfo());
-								privado.clear();
-									
-							}
-							resp=new Response(publico, privado);
-							out_obj.writeObject(resp);
-							
-						}
-					}
-					else {
-						resp= new Response(-6);
-						out_obj.writeObject(resp);
-					}
-					//output.println("\n HAY DOCUMENTOS"); //cambiar
-					out.close();
-					out_obj.close();
+							for (String file : complete.get(1))
+								listToSend.add(DatabaseEntry.recoverEntry(savePath, file).getInfo());
 
+						} else if (confidencialidad.equals("PUB")) {
+							for (String file : complete.get(0))
+								listToSend.add(DatabaseEntry.recoverEntry(savePath, file).getInfo());
+						}
+
+						out_obj.writeObject(new Response(listToSend));
+						out_obj.flush();
+						out_obj.close();
+					}else {
+						out_obj.writeObject(new Response(-1));
+						out_obj.flush();
+						out_obj.close();
+					}
+					out.close();
+					input.close();
+					out_obj.close();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

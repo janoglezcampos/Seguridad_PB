@@ -19,25 +19,9 @@ public class Response implements Serializable {
 	private byte [] nonEncriptedFile;
 	private byte [] cipherParams;
 	
-	private ArrayList<String> publicFiles;
-	private ArrayList<String> privateFiles;
-
-	public ArrayList<String> getPublicFiles() {
-		return publicFiles;
-	}
-
-	public void setPublicFiles(ArrayList<String> publicFiles) {
-		this.publicFiles = publicFiles;
-	}
-
-	public ArrayList<String> getPrivateFiles() {
-		return privateFiles;
-	}
-
-	public void setPrivateFiles(ArrayList<String> privateFiles) {
-		this.privateFiles = privateFiles;
-	}
-
+	private String fileName;
+	
+	private ArrayList<String> fileList;
 
 	//Respuesta de registro
 	public Response(int idRegistro, String selloTemporal, String idPropietario, byte[] SigRD, Certificate CertFirmaS) {
@@ -50,7 +34,7 @@ public class Response implements Serializable {
 	}
 
 	//Respuesta de recuperacion de archivo privado
-	public Response(int idRegistro, String idPropietario, String selloTemporal, byte[] encriptedFile, byte[] cipherParams, byte[] encriptedKey, byte[] SigRD, Certificate CertFirmaS) {
+	public Response(int idRegistro, String idPropietario, String fileName, String selloTemporal, byte[] encriptedFile, byte[] cipherParams, byte[] encriptedKey, byte[] SigRD, Certificate CertFirmaS) {
 		this(idRegistro, selloTemporal, idPropietario, SigRD, CertFirmaS);
 		this.isPrivate = true;
 		this.encriptedFile = encriptedFile;
@@ -58,15 +42,14 @@ public class Response implements Serializable {
 		this.cipherParams = cipherParams;
 	}
 	//Respuesta de recuperacion de archivo publico
-	public Response(int idRegistro, String idPropietario, String selloTemporal, byte[] file, byte[] SigRD, Certificate CertFirmaS) {
+	public Response(int idRegistro, String idPropietario, String fileName, String selloTemporal, byte[] file, byte[] SigRD, Certificate CertFirmaS) {
 		this(idRegistro, selloTemporal, idPropietario, SigRD, CertFirmaS);
 		this.isPrivate = false;
 		this.nonEncriptedFile = file;
 	}
 	//Respuesta de listado
-	public Response(ArrayList<String> publicList, ArrayList<String> privateList) {
-		this.publicFiles = publicList;
-		this.privateFiles = privateList;
+	public Response(ArrayList<String> list) {
+		this.fileList = list;
 		this.nError=0;
 	}
 
@@ -108,6 +91,12 @@ public class Response implements Serializable {
 	public byte[] getCipherParams() {
 		return cipherParams;
 	}
+	public String getFileName() {
+		return fileName;
+	}
+	public ArrayList<String> getFileList() {
+		return fileList;
+	}
 
 	public String getErrorMsg() {
 		if (nError == 0) return "Respuesta correcta";
@@ -122,8 +111,6 @@ public class Response implements Serializable {
 			return "Documento no existente";
 		case -5:
 			return "Acceso denegado";
-		case -6:
-			return "Confidencialidad incorrecta";
 		default:
 			return "Error no especificado";
 		}

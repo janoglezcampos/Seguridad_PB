@@ -2,31 +2,23 @@ package clientpart;
 
 
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.net.Socket;
 import java.security.KeyStoreException;
-import java.security.Principal;
 import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
-
-
+import java.security.cert.CertificateEncodingException;
 
 import common.Response;
 
 public class Util2 {
-
-	private static String authAlias="clientAuth";
+	private static final String AUTH_ALIAS =Client.AUTH_ALIAS;
 	public static void start(final Socket client2, String confidencialidad2) {
 		// TODO Auto-generated method stub
 
-		System.out.println("client start SEND ");
 		new Thread() {
 			public void run() {
 				try { 
-					String op = "2"; 
+					String op = "2";
 					DataOutputStream out;
 
 					out = new DataOutputStream(client2.getOutputStream());
@@ -34,15 +26,19 @@ public class Util2 {
 					out.write(op.getBytes());
 					out.flush();
 					
-					Certificate certificate = Client.getKeyStore().getCertificate(authAlias);
-					//byte [] certFirma= certificate.getEncoded();
-					X509Certificate extra= (X509Certificate) certificate ;
-					Principal idPropietario = extra.getIssuerDN();
-					//System.out.println("ID PROPIETARIO: "+ idPropietario.toString());
+					Certificate certificate = Client.getKeyStore().getCertificate(AUTH_ALIAS);
+					byte[] certBytes;
+					try {
+						certBytes = certificate.getEncoded();
+						out.writeInt(certBytes.length);
+						out.write(certBytes);
+						out.flush();
+					} catch (CertificateEncodingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return;
+					}
 
-					out.writeInt(idPropietario.toString().getBytes().length);
-					out.write(idPropietario.toString().getBytes());
-					out.flush();
 					out.writeInt(confidencialidad2.getBytes().length);
 					out.write(confidencialidad2.getBytes());
 					out.flush();
@@ -52,27 +48,20 @@ public class Util2 {
 					
 					Response resp =(Response) input_obj.readObject();
 					
+					
+					String format = "%-20s%s%n";
+					String fieldName[] = {"ID de registro: ", "ID de propietario: ", "Nombre del documento: ", "Fecha:"};
 					if (resp.getError()==0) {
-						if(confidencialidad2.equals("PRIV")) {
-							System.out.println("Documentos en privado:");
-							for(String priv: resp.getPrivateFiles()) {
-								System.out.println(priv);
+						for(String info:resp.getFileList())
+							for(int i = 0; i < info.split("|").length; i++) 
+								System.out.printf(format, fieldName[i], info.split("|")[i]);
 								
-							}
-						}
-						System.out.println("Documentos en publico:");
-						for(String pub: resp.getPublicFiles()) {
-							System.out.println(pub);
-							
-						}	
-						
 					}else {
 						System.out.println(resp.getErrorMsg());
 						
 						
 					}
 			
-				
 					input.close();
 					input_obj.close();
 					out.close();

@@ -13,27 +13,28 @@ import java.security.cert.Certificate;
 import java.util.ArrayList;
 
 public class Util {
-	public static String signAlias= "clientsign";
-	public static String serverCipherAlias= "servercipher";
-	public static String clientCipherAlias= "clientcipher";
+	public static final String CIPHER_ALIAS =Client.CIPHER_ALIAS;
+	public static final String SIGN_ALIAS=Client.SIGN_ALIAS;
+	public static final String AUTH_ALIAS=Client.AUTH_ALIAS;
+	public static final String SERVER_CIPHER_ALIAS = Client.SERVER_CIPHER_ALIAS;
 
-	public static void sendFile(final Socket clientSock, String name, String confidencialidad, String ubicacion,String passwd_key){
+	public static void sendFile(final Socket clientSock, String confidencialidad, String ubicacion,String passwd_key){
 		System.out.println("Client start SEND ");
 		try {
 			if (confidencialidad.equals("PRIVADO")||confidencialidad.equals("PUBLICO")) {
+				
 				DataOutputStream out = new DataOutputStream(clientSock.getOutputStream());
 				String op = "1";
 				out.writeInt(op.getBytes().length);
 				out.write(op.getBytes());
 				out.flush();
 
-				//Util.registrar("name", "confidencialidad", "C:\\Users\\usuario\\Desktop\\alamcenes/prueba.PNG");
 				ArrayList<byte []> message = Util.generateMessage(passwd_key, ubicacion,confidencialidad);
 				out.writeInt(confidencialidad.getBytes().length);
 				out.write(confidencialidad.getBytes());
-				//out.flush();
+				
 				out.writeInt(message.size());
-				//out.flush();
+				
 				for(byte[] slice: message) {
 					out.writeInt(slice.length);
 					out.write(slice);
@@ -54,7 +55,7 @@ public class Util {
 
 							if(Validation.checkSign(certFirma, SignRDContent, res.getSigRD())) {
 								Client.saveHash(res.getIdRegistro(), fileContent);
-								System.out.println("Archivo guardado correctamente");
+								System.out.println("Documento correctamente registrado con el numero con ID: " + res.getIdRegistro());
 							}else{
 								System.out.println("SigRD incorrecta");
 								//SigRD incorrecta
@@ -109,17 +110,17 @@ public class Util {
 		byte[] fileContent = Files.readAllBytes(path);
 
 		if (confidencialidad.equals("PRIVADO")) {
-			PublicKey clavetrust = Client.getTrust().getCertificate(serverCipherAlias).getPublicKey();
+			PublicKey clavetrust = Client.getTrust().getCertificate(SERVER_CIPHER_ALIAS).getPublicKey();
 			full.addAll(Encription.encript2sendPGP(fileContent, clavetrust));
 		}else {
 			full.add(fileContent);
 		}
 		//FIRMAMOS EL FICHERO NO ENCRIPTADO
-		PrivateKey signkey = (PrivateKey) Client.getKeyStore().getKey(signAlias, clave);
+		PrivateKey signkey = (PrivateKey) Client.getKeyStore().getKey(SIGN_ALIAS, clave);
 		full.add(Validation.signContent(fileContent, signkey));
 
 		//OBTENEMOS EL CERTFIRMA
-		Certificate certiFirma = Client.getKeyStore().getCertificate(signAlias); 
+		Certificate certiFirma = Client.getKeyStore().getCertificate(SIGN_ALIAS); 
 		try {
 			byte [] certibyte = certiFirma.getEncoded();
 			full.add(certibyte);
@@ -130,7 +131,7 @@ public class Util {
 		}
 
 		//OBTENEMOS CERTIFICADO DE CIFRADO 
-		Certificate certiCifrado = Client.getKeyStore().getCertificate(clientCipherAlias);
+		Certificate certiCifrado = Client.getKeyStore().getCertificate(CIPHER_ALIAS);
 		try {
 			byte [] certibyte2 = certiCifrado.getEncoded();
 			full.add(certibyte2);

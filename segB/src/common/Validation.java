@@ -19,8 +19,6 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
-import clientpart.Client;
-
 public class Validation {
 
 	public static boolean validateCert(Certificate cert, KeyStore trust) throws Exception{
@@ -76,7 +74,7 @@ public class Validation {
 	
 	//Dos clientes distintos tienen el mismo issuerDN si su certificado está firmado por la misma CA,
 	//para identificar al propietario es necesario usar el SubejctDN también.
-	public static String getOwner(Certificate cert) {
+	public static String getIdentity(Certificate cert) {
 		boolean completeDN = false;
 		String issuerDN = ((X509Certificate)cert).getIssuerDN().toString();
 		String subjectDN = ((X509Certificate)cert).getSubjectDN().toString();

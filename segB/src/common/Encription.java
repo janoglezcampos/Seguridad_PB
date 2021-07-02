@@ -1,15 +1,11 @@
 package common;
 
-import java.security.AlgorithmParameters;
-import java.security.KeyStore;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.KeyStore.PasswordProtection;
 import java.security.KeyStore.SecretKeyEntry;
 import java.util.ArrayList;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 
 

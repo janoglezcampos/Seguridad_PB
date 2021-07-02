@@ -4,7 +4,6 @@ import common.*;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.file.*;
 import java.security.cert.*;
 import java.util.ArrayList;
 
@@ -22,81 +21,77 @@ public class Util3 {
 					byte[] certAuth = input.readNBytes(input.readInt());
 					String idRegistro = new String(input.readNBytes(input.readInt()));
 
-					InputStream in = new ByteArrayInputStream(certAuth);
+					InputStream inCert = new ByteArrayInputStream(certAuth);
 					CertificateFactory cf = CertificateFactory.getInstance("X.509");
-					Certificate certificate = cf.generateCertificate(in);
+					Certificate certificate = cf.generateCertificate(inCert);
 					Certificate serverCertSign = Server.getKeyStore().getCertificate(SIGNALIAS);
 
 					ObjectOutputStream response = new ObjectOutputStream(aClient.getOutputStream());
 					Response res = null;
 
-					boolean esprivado = false;
-
-					String idPropietario = ((X509Certificate) certificate).getIssuerDN().toString();
+					String idPropietario = Validation.getIdentity(certificate);
 
 					ArrayList<ArrayList<String>> fileList = DatabaseEntry.getFiles(SAVEPATH, idPropietario);
 					ArrayList<String> publico = fileList.get(0);
 					ArrayList<String> privado = fileList.get(1);
 
 					String fileToRetrieve = null;
+					DatabaseEntry dataEntry;
 
-					// initContador esta preparado para soportar eliminacion de documentos a mano,
-					// pero no esta funcion!!
-					if (DatabaseEntry.entryExists(SAVEPATH,Integer.parseInt(idRegistro))!=null) {
-						for (String fileName : privado) {
-							if (esprivado = fileName.startsWith(idRegistro)) {
+					switch (DatabaseEntry.getOwnerByID(SAVEPATH, Integer.parseInt(idRegistro))) {
+					case "":
+						res = new Response(-4);
+						break;
+					case "PUB":
+						for (String fileName : publico) {
+							if (fileName.startsWith(idRegistro)) {
 								fileToRetrieve = fileName;
 							}
 						}
 
-						if (esprivado) {
-							if (Validation.validateCert(certificate, Server.getTrust())) {
-								if ((idRegistro + "_" + idPropietario + ".sig.cif").equals(fileToRetrieve)) {
-									System.out.println("Propietario correcto, recuperando archivo: " + fileToRetrieve);
+						dataEntry = DatabaseEntry.recoverEntry(SAVEPATH, fileToRetrieve);
 
-									ArrayList<byte[]> encripted2send = new ArrayList<byte[]>();
-									FileInputStream fileIn = new FileInputStream(
-											Paths.get(SAVEPATH, fileToRetrieve).toString());
-									ObjectInputStream objectIn = new ObjectInputStream(fileIn);
-									DatabaseEntry dataEntry = (DatabaseEntry) objectIn.readObject();
+						res = new Response(Integer.parseInt(idRegistro), idPropietario, dataEntry.getOriginalFileName(),dataEntry.getSello(),
+								dataEntry.getContent(), dataEntry.getSigRD(), serverCertSign);
+						break;
+					default:
+						for (String fileName : privado) {
+							if (fileName.startsWith(idRegistro)) {
+								fileToRetrieve = fileName;
+							}
+						}
 
-									byte[] decriptedFile = Encription.decriptDocument(dataEntry.getContent(),
-											SECRETKEYALIAS, passwd_key, algorithm, dataEntry.getCipherParams(),
-											Server.getKeyStore());
+						if (Validation.validateCert(certificate, Server.getTrust())) {
+							if ((idRegistro + "_" + idPropietario + ".sig.cif").equals(fileToRetrieve)) {
+								ArrayList<byte[]> encripted2send = new ArrayList<byte[]>();
 
-									encripted2send = Encription.encript2sendPGP(decriptedFile,
-											dataEntry.getClientPublicKey());
-									res = new Response(Integer.parseInt(idRegistro), idPropietario,
-											dataEntry.getSello(), encripted2send.get(0), encripted2send.get(1),
-											encripted2send.get(2), dataEntry.getSigRD(), serverCertSign);
-								} else {
-									res = new Response(-3);
-								}
+								dataEntry = DatabaseEntry.recoverEntry(SAVEPATH, fileToRetrieve);
+
+								byte[] decriptedFile = Encription.decriptDocument(dataEntry.getContent(),
+										SECRETKEYALIAS, passwd_key, algorithm, dataEntry.getCipherParams(),
+										Server.getKeyStore());
+
+								encripted2send = Encription.encript2sendPGP(decriptedFile,
+										dataEntry.getClientPublicKey());
+
+								res = new Response(Integer.parseInt(idRegistro), idPropietario, dataEntry.getOriginalFileName(), dataEntry.getSello(),
+										encripted2send.get(0), encripted2send.get(1), encripted2send.get(2),
+										dataEntry.getSigRD(), serverCertSign);
 							} else {
-								res = new Response(-1);
+								res = new Response(-3);
 							}
 						} else {
-							for (String fileName : publico) {
-								if (fileName.startsWith(idRegistro)) {
-									fileToRetrieve = fileName;
-								}
-							}
-
-							FileInputStream fileIn = new FileInputStream(
-									Paths.get(SAVEPATH, fileToRetrieve).toString());
-							ObjectInputStream objectIn = new ObjectInputStream(fileIn);
-							DatabaseEntry dataEntry = (DatabaseEntry) objectIn.readObject();
-
-							res = new Response(Integer.parseInt(idRegistro), idPropietario, dataEntry.getSello(),
-									dataEntry.getContent(), dataEntry.getSigRD(), serverCertSign);
+							res = new Response(-1);
 						}
-					} else {
-						res = new Response(-4);
+						break;
 					}
+
+					// initContador esta preparado para soportar eliminacion de documentos a mano,
+					// pero no esta funcion!!
 					response.writeObject(res);
 					response.flush();
 					response.close();
-					in.close();
+					inCert.close();
 					aClient.close();
 				} catch (Exception e) {
 					e.printStackTrace();

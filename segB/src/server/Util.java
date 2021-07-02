@@ -36,6 +36,7 @@ public class Util {
 					for (int i = 0; i < listSize - 2; i++) {
 						full.add(input.readNBytes(input.readInt()));
 					}
+					
 					byte[] desencriptado;
 					if (isPrivate) {
 						desencriptado = Encription.decriptFilePGP(full.get(2), full.get(0), full.get(1), contrasenha,
@@ -81,7 +82,7 @@ public class Util {
 								responseStream.writeObject(dataEntry.getResponse(Server.getKeyStore(), SIGNALIAS));
 
 								// responseStream.writeObject(file.getResponse());
-								System.out.println("Server: Archivo guardado");
+								System.out.println("Server: Archivo guardado: " + dataEntry.getIdRegistro());
 							} else {
 								dataEntry.addFileContent(desencriptado);
 								objectOut.writeObject(dataEntry);
