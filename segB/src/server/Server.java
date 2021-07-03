@@ -16,8 +16,8 @@ public class Server {
 	public static final String AUTHALIAS = "serverauth";
 	public static final String SECRETKEYALIAS = "dataenckey";
 
-	private static final boolean OCSP_ENABLE = true;
-	public static final boolean ID_FROM_SUBJECT = true;
+	private static final boolean OCSP_ENABLE = false;
+	public static final boolean ID_FROM_SUBJECT = false;
 
 	private static TrustManager[] trustManagers;
 	private static KeyManager[] keyManagers;

@@ -11,10 +11,10 @@ public class Client {
 	private static final String SERVER_ADDRESS = "localhost";
 	private static final int SERVER_PORT = 443;
 
-	private static final boolean OCSP_ENABLE = true; // Habilita ocsp stapling
+	private static final boolean OCSP_ENABLE = false; // Habilita ocsp stapling
 	private static final boolean OCSP_CLIENT_SIDE_ENABLE = false; // Habilita ocsp client-side si ocsp stapling está
 																	// habilitado
-	public static final boolean CHECK_SIGN_IF_PUBLIC = false;
+	public static final boolean CHECK_SIGN_IF_PUBLIC = true;
 	
 	public static final String CIPHER_ALIAS = "clientcipher";
 	public static final String SIGN_ALIAS = "clientsign";
