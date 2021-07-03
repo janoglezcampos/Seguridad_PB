@@ -59,10 +59,8 @@ public class Util2 {
 			client2.close();
 
 		} catch (IOException | KeyStoreException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

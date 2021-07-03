@@ -108,7 +108,6 @@ public class Util3 {
 			out.close();
 			input.close();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

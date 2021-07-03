@@ -6,103 +6,93 @@ import java.security.*;
 import java.security.cert.*;
 import javax.net.ssl.*;
 
-
-//Arguments:
-//Users/lexy/Desktop/Clases/Seguridad/almacenes/keystoreServidor.jceks
-//Users/lexy/Desktop/Clases/Seguridad/almacenes/truststoreServidor.jceks
-//serverpass
-//RC2
 public class Server {
 	public static final int SERVER_PORT = 443;
-	
-	public static final String SAVEPATH="/Users/lexy/Desktop/Clases/Seguridad/serverSavedFiles/";
 
-	public static final String CIPHERALIAS ="serverCipher";
-	public static final String SIGNALIAS="serverSign";
-	public static final String AUTHALIAS="serverauth";
+	public static final String SAVEPATH = "/Users/lexy/Desktop/Clases/Seguridad/serverSavedFiles/";
+
+	public static final String CIPHERALIAS = "serverCipher";
+	public static final String SIGNALIAS = "serverSign";
+	public static final String AUTHALIAS = "serverauth";
 	public static final String SECRETKEYALIAS = "dataenckey";
 
 	private static final boolean OCSP_ENABLE = true;
 	public static final boolean ID_FROM_SUBJECT = true;
-	
+
 	private static TrustManager[] trustManagers;
-	private static KeyManager[] keyManagers ;
+	private static KeyManager[] keyManagers;
 	private static KeyStore trust;
 	private static KeyStore key;
-	
+
 	private static int contador;
 
-
-	public  static void main(String[] args) {
+	public static void main(String[] args) {
 		System.out.println(System.getProperty("java.version"));
 		try {
-			if (args.length!=4){
-				System.out.println("Número de parametros incorrecto, introduzca keyStore, trustStore, contraseñaKeyStore y algoritmoCifrado");
+			if (args.length != 4) {
+				System.out.println(
+						"Número de parametros incorrecto, introduzca keyStore, trustStore, contraseñaKeyStore y algoritmoCifrado");
 				System.exit(0);
 			}
-			
+
 			System.out.println("INICIANDO CONEXION");
-			start(args[0],args[1],args[2],args[3]);
+			start(args[0], args[1], args[2], args[3]);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-
 	}
-    static class ServerParameters {
-        boolean enabled = true;
-        int cacheSize = 0;
-        int cacheLifetime = 0;
-        int respTimeout = 5000;
-        String respUri = "http://localhost:9999";
-        boolean respOverride = false;
-        boolean ignoreExts = false;
-        String[] protocols = new String[]{ "TLSv1.2" };
-        String[] ciphers = null;
 
-        ServerParameters() { }
-    }
+	static class ServerParameters {
+		boolean enabled = true;
+		int cacheSize = 0;
+		int cacheLifetime = 0;
+		int respTimeout = 5000;
+		String respUri = "http://localhost:9999";
+		boolean respOverride = false;
+		boolean ignoreExts = false;
+		String[] protocols = new String[] { "TLSv1.2" };
+		String[] ciphers = null;
 
+		ServerParameters() {
+		}
+	}
 
-	public static void start(String keyStorePath, String trustStorePath, String password, String chipherAlgoritm) throws Exception {
+	public static void start(String keyStorePath, String trustStorePath, String password, String chipherAlgoritm)
+			throws Exception {
 		System.out.println("INICIANDO ALMACENES");
 		ServerParameters servParams = new ServerParameters();
-		
-		
-        // Set all the other operating parameters
-        System.setProperty("jdk.tls.stapling.cacheSize",
-                Integer.toString(servParams.cacheSize));
-        System.setProperty("jdk.tls.stapling.cacheLifetime",
-                Integer.toString(servParams.cacheLifetime));
-        System.setProperty("jdk.tls.stapling.responseTimeout",
-                Integer.toString(servParams.respTimeout));
-        System.setProperty("jdk.tls.stapling.responderURI", servParams.respUri);
-        System.setProperty("jdk.tls.stapling.responderOverride",
-                Boolean.toString(servParams.respOverride));
-        System.setProperty("jdk.tls.stapling.ignoreExtensions",
-                Boolean.toString(servParams.ignoreExts));
-        
-        
-        Security.setProperty("jdk.tls.disabledAlgorithms", "");
-		store(keyStorePath,trustStorePath,password);
 
+		// Set all the other operating parameters
+		System.setProperty("jdk.tls.stapling.cacheSize", Integer.toString(servParams.cacheSize));
+		System.setProperty("jdk.tls.stapling.cacheLifetime", Integer.toString(servParams.cacheLifetime));
+		System.setProperty("jdk.tls.stapling.responseTimeout", Integer.toString(servParams.respTimeout));
+		System.setProperty("jdk.tls.stapling.responderURI", servParams.respUri);
+		System.setProperty("jdk.tls.stapling.responderOverride", Boolean.toString(servParams.respOverride));
+		System.setProperty("jdk.tls.stapling.ignoreExtensions", Boolean.toString(servParams.ignoreExts));
+
+		Security.setProperty("jdk.tls.disabledAlgorithms", "");
+		store(keyStorePath, trustStorePath, password);
 
 		SSLContext sc = SSLContext.getInstance("TLS");
-		final X509KeyManager origKm = (X509KeyManager)keyManagers[0];
+		final X509KeyManager origKm = (X509KeyManager) keyManagers[0];
 		X509KeyManager km = new CustomKeyManager(AUTHALIAS, origKm);
 		sc.init(new KeyManager[] { km }, trustManagers, null);
-		
-		//SSLServerSocketFactory sslssf = new CustomizedServerSocketFactory(sc,
-        //        servParams.protocols, servParams.ciphers);
+
+		// SSLServerSocketFactory sslssf = new CustomizedServerSocketFactory(sc,
+		// servParams.protocols, servParams.ciphers);
 
 		SSLServerSocketFactory ssf = sc.getServerSocketFactory();
 		ServerSocket serverSocket1 = ssf.createServerSocket(SERVER_PORT);
-		//ServerSocket serverSocket1 = (SSLServerSocket) sslssf.createServerSocket(SERVER_PORT);
-		((SSLServerSocket)serverSocket1).setEnabledCipherSuites(((SSLServerSocket)serverSocket1).getSupportedCipherSuites());
-		((SSLServerSocket)serverSocket1).setNeedClientAuth(true);
-		//((SSLServerSocket) serverSocket1).setEnabledProtocols(protocols);
-		System.out.println("Esperando conexión... (OCSP habilitado: "+ System.getProperty("jdk.tls.server.enableStatusRequestExtension") +")");
-		
+		// ServerSocket serverSocket1 = (SSLServerSocket)
+		// sslssf.createServerSocket(SERVER_PORT);
+		((SSLServerSocket) serverSocket1)
+				.setEnabledCipherSuites(((SSLServerSocket) serverSocket1).getSupportedCipherSuites());
+		((SSLServerSocket) serverSocket1).setNeedClientAuth(true);
+		// ((SSLServerSocket) serverSocket1).setEnabledProtocols(protocols);
+		System.out.println("Esperando conexión... (OCSP habilitado: "
+				+ System.getProperty("jdk.tls.server.enableStatusRequestExtension") + ")");
+
 		initContador();
 		while (true) {
 			try {
@@ -110,14 +100,14 @@ public class Server {
 				System.out.println(client.getRemoteSocketAddress().toString());
 				System.out.println("Client accepted");
 				client.setSoLinger(true, 10000);
-	
-				DataInputStream input= new DataInputStream(client.getInputStream());
+
+				DataInputStream input = new DataInputStream(client.getInputStream());
 				System.out.println("Operación entrante");
-				String operacion= new String (input.readNBytes(input.readInt()));
-				//input.close();
-				switch(operacion) {
+				String operacion = new String(input.readNBytes(input.readInt()));
+				// input.close();
+				switch (operacion) {
 				case "1":
-					Util.receiveFile(client,chipherAlgoritm,password);
+					Util.receiveFile(client, chipherAlgoritm, password);
 					break;
 				case "2":
 					Util2.start(client);
@@ -129,162 +119,90 @@ public class Server {
 					System.out.println("Operación desconocida");
 					break;
 				}
-			}catch(Exception e) {
+			} catch (Exception e) {
 				System.out.println("Error ejecutando durante la comunicacion");
 				e.printStackTrace();
 			}
 		}
 	}
 
-	public static void store(String keyStorePath, String trustStorePath, String passKeystore) throws NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException, KeyStoreException {
+	public static void store(String keyStorePath, String trustStorePath, String passKeystore)
+			throws NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException,
+			UnrecoverableKeyException, KeyStoreException {
 		System.setProperty("jdk.tls.server.enableStatusRequestExtension", String.valueOf(OCSP_ENABLE));
-		
+
 		KeyStore keyStore;
 		KeyStore trustedStore;
 
 		char[] clave = passKeystore.toCharArray();
-		
+
 		keyStore = KeyStore.getInstance("JCEKS");
-		keyStore.load(new FileInputStream(keyStorePath),clave);
+		keyStore.load(new FileInputStream(keyStorePath), clave);
 
 		key = keyStore;
 
 		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		kmf.init(keyStore, clave);
-		
-		
+
 		keyManagers = kmf.getKeyManagers();
 
 		trustedStore = KeyStore.getInstance("JCEKS");
-		trustedStore.load(new FileInputStream(trustStorePath), clave);  
+		trustedStore.load(new FileInputStream(trustStorePath), clave);
 
-		trust=trustedStore;
+		trust = trustedStore;
 
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		tmf.init(trustedStore);
 
 		trustManagers = tmf.getTrustManagers();
 
-		/*
-		System.setProperty("javax.net.ssl.keyStore", keyStorePath);
-		System.setProperty("javax.net.ssl.keyStoreType",     "JCEKS");
-		System.setProperty("javax.net.ssl.keyStorePassword",passKeystore);
-
-		System.setProperty("jdk.security.allowNonCaAnchor", "true" );
-
-		System.setProperty("javax.net.ssl.trustStore", trustStorePath);
-		System.setProperty("javax.net.ssl.trustStoreType",     "JCEKS");
-		System.setProperty("javax.net.ssl.trustStorePassword", passKeystore);
-		*/
 	}
-	public static KeyStore getTrust () {
+
+	public static KeyStore getTrust() {
 		return trust;
 	}
 
 	public static KeyStore getKeyStore() {
 		return key;
 	}
-	
-	/*
-    static class CustomizedServerSocketFactory extends SSLServerSocketFactory {
-        final SSLContext sslc;
-        final String[] protocols;
-        final String[] cipherSuites;
 
-        CustomizedServerSocketFactory(SSLContext ctx, String[] prots, String[] suites)
-            throws GeneralSecurityException {
-            super();
-            sslc = (ctx != null) ? ctx : SSLContext.getDefault();
-            protocols = prots;
-            cipherSuites = suites;
-
-        }
-
-        @Override
-        public ServerSocket createServerSocket(int port) throws IOException {
-            ServerSocket sock =
-                    sslc.getServerSocketFactory().createServerSocket(port);
-            customizeSocket(sock);
-            return sock;
-        }
-
-        @Override
-        public ServerSocket createServerSocket(int port, int backlog)
-                throws IOException {
-            ServerSocket sock =
-                    sslc.getServerSocketFactory().createServerSocket(port,
-                            backlog);
-            customizeSocket(sock);
-            return sock;
-        }
-
-        @Override
-        public ServerSocket createServerSocket(int port, int backlog,
-                InetAddress ifAddress) throws IOException {
-            ServerSocket sock =
-                    sslc.getServerSocketFactory().createServerSocket(port,
-                            backlog, ifAddress);
-            customizeSocket(sock);
-            return sock;
-        }
-
-        @Override
-        public String[] getDefaultCipherSuites() {
-            return sslc.getDefaultSSLParameters().getCipherSuites();
-        }
-
-        @Override
-        public String[] getSupportedCipherSuites() {
-            return sslc.getSupportedSSLParameters().getCipherSuites();
-        }
-
-        private void customizeSocket(ServerSocket sock) {
-            if (sock instanceof SSLServerSocket) {
-                if (protocols != null) {
-                    ((SSLServerSocket)sock).setEnabledProtocols(protocols);
-                }
-                //Habilitadas todas la cipher suits
-                ((SSLServerSocket)sock).setEnabledCipherSuites(((SSLServerSocket)sock).getSupportedCipherSuites());
-            }
-        }
-    }
-    */
-	
 	private static void initContador() {
-		File[] fileList =new File (SAVEPATH).listFiles();
+		File[] fileList = new File(SAVEPATH).listFiles();
 		String fileName;
-		int lastCounter=-1;
+		int lastCounter = -1;
 		int idRegistro = 0;
-		for(File file : fileList) {
+		for (File file : fileList) {
 			fileName = file.getName();
-			if(fileName.contains(".sig")) {
+			if (fileName.contains(".sig")) {
 				idRegistro = Integer.parseInt(fileName.split("_")[0]);
-				if(idRegistro>lastCounter) lastCounter = idRegistro;
+				if (idRegistro > lastCounter)
+					lastCounter = idRegistro;
 			}
 		}
-		contador = lastCounter+1;
+		contador = lastCounter + 1;
 	}
-	
+
 	public static int getContador() {
 		return contador;
 	}
 
 	public static void incremetarContador() {
-		contador+=1;
+		contador += 1;
 	}
 
-	//Modificando CustomKeyManager podemos definir SIEMPRE que certificado enviamos, así podemos asegurar que la comprobación ocsp se hace
-	//sobre el certificado que queremos
-	static class CustomKeyManager implements X509KeyManager{
-		
+	// Modificando CustomKeyManager podemos definir SIEMPRE que certificado
+	// enviamos, así podemos asegurar que la comprobación ocsp se hace
+	// sobre el certificado que queremos
+	static class CustomKeyManager implements X509KeyManager {
+
 		private String certAlias;
 		private X509KeyManager originalKm;
-		
+
 		public CustomKeyManager(String alias, X509KeyManager km) {
 			this.certAlias = alias;
 			this.originalKm = km;
 		}
-		
+
 		@Override
 		public String[] getClientAliases(String keyType, Principal[] issuers) {
 			return originalKm.getClientAliases(keyType, issuers);
@@ -314,7 +232,7 @@ public class Server {
 		public PrivateKey getPrivateKey(String alias) {
 			return originalKm.getPrivateKey(alias);
 		}
-		
+
 	}
 
 }
