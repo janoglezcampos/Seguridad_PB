@@ -54,7 +54,8 @@ public class Util {
 
 							if(Validation.checkSign(certFirma, SignRDContent, res.getSigRD())) {
 								Client.saveHash(res.getIdRegistro(), fileContent);
-								System.out.println("\n!Error: " + "Documento correctamente registrado con el numero con ID: " + res.getIdRegistro());
+								System.out.println("Documento correctamente registrado con el numero con ID: " + res.getIdRegistro());
+								Files.deleteIfExists(Paths.get(ubicacion));
 							}else{
 								System.out.println("\n!Error: " + "SigRD incorrecta");
 								//SigRD incorrecta
