@@ -1,21 +1,12 @@
 package server;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.file.Paths;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.*;
 
 import common.*;
 
@@ -41,7 +32,8 @@ public class DatabaseEntry implements Serializable{
 		this.originalFileName = originalFileName;
 		this.clientPublicKey = clientPublicKey;
 
-		idPropietario = ((X509Certificate)certificate).getIssuerDN().toString();
+		//idPropietario = ((X509Certificate)certificate).getIssuerDN().toString();
+		idPropietario = getIdentity(certificate);
 
 		this.sello= sello();
 
@@ -121,8 +113,6 @@ public class DatabaseEntry implements Serializable{
 		this.content = content;
 	}
 
-
-
 	public static DatabaseEntry recoverEntry(String savePath, String fileName) throws ClassNotFoundException, IOException {
 		FileInputStream fileIn = new FileInputStream(
 				Paths.get(savePath, fileName).toString());
@@ -147,7 +137,6 @@ public class DatabaseEntry implements Serializable{
 
 	public static ArrayList<ArrayList<String>> getFiles(String savePath,String propietario){
 		File[] fileList =new File (savePath).listFiles();
-		boolean onlyPublic = (propietario == null) ? true : false;
 		
 		ArrayList<ArrayList<String>> complete = new ArrayList<ArrayList<String>>();
 		ArrayList<String> privateFiles = new ArrayList<String>();
@@ -155,7 +144,7 @@ public class DatabaseEntry implements Serializable{
 		String name;
 		for(File file: fileList){
 			name = file.getName();
-			if(name.endsWith(".cif") && name.contains(propietario) && !onlyPublic) {
+			if(name.endsWith(".cif") && name.contains(propietario+".sig")) {
 				privateFiles.add(name);
 			}
 			else if(name.endsWith(".sig")) {
@@ -188,6 +177,14 @@ public class DatabaseEntry implements Serializable{
 			}
 		}
 		return "";
+	}
+	
+	//Dos clientes distintos tienen el mismo issuerDN si su certificado está firmado por la misma CA,
+	//para identificar al propietario es necesario usar el SubejctDN también.
+	public static String getIdentity(Certificate cert) {
+		String issuerDN = ((X509Certificate)cert).getIssuerDN().toString();
+		String subjectCN = ((X509Certificate)cert).getSubjectDN().getName();
+		return (Server.ID_FROM_SUBJECT) ? (issuerDN+subjectCN) : issuerDN;
 	}
 
 }

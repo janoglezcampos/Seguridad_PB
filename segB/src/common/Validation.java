@@ -1,29 +1,16 @@
 package common;
 
 import java.io.ByteArrayOutputStream;
-import java.security.InvalidKeyException;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.security.cert.CertPath;
-import java.security.cert.CertPathValidator;
-import java.security.cert.CertPathValidatorException;
+import java.security.*;
+import java.security.cert.*;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.PKIXParameters;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Validation {
 
 	public static boolean validateCert(Certificate cert, KeyStore trust) throws Exception{
 		try {
-			List<X509Certificate> mylist = new ArrayList<X509Certificate>();          
+			ArrayList<X509Certificate> mylist = new ArrayList<X509Certificate>();          
 			mylist.add((X509Certificate) cert);
 			CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
 			//InputStream is = new ByteArrayInputStream(in);
@@ -70,15 +57,6 @@ public class Validation {
 		outputStream.write(firmaDoc);
 
 		return outputStream.toByteArray();
-	}
-	
-	//Dos clientes distintos tienen el mismo issuerDN si su certificado está firmado por la misma CA,
-	//para identificar al propietario es necesario usar el SubejctDN también.
-	public static String getIdentity(Certificate cert) {
-		boolean completeDN = false;
-		String issuerDN = ((X509Certificate)cert).getIssuerDN().toString();
-		String subjectDN = ((X509Certificate)cert).getSubjectDN().toString();
-		return (completeDN) ? (issuerDN+subjectDN) : issuerDN;
 	}
 
 }

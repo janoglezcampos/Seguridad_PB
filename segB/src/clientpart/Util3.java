@@ -19,7 +19,6 @@ public class Util3 {
 			// No se envía el tipo, publico o privado porque ya lo sabe el servido¿?
 			String op = "3";
 			DataOutputStream out;
-			System.out.println("Enviada operación");
 
 			out = new DataOutputStream(client2.getOutputStream());
 			out.writeInt(op.getBytes().length);
@@ -35,9 +34,7 @@ public class Util3 {
 			out.writeInt(idRegistro.getBytes().length);
 			out.write(idRegistro.getBytes());
 			out.flush();
-			System.out.println("Enviada operación");
 			ObjectInputStream input = new ObjectInputStream(client2.getInputStream());
-			System.out.println("Rescibida respuesta");
 			Response response = (Response) input.readObject();
 			byte[] fileContent = null;
 			byte[] SignRDContent;
@@ -94,18 +91,18 @@ public class Util3 {
 						if (Client.checkHash(response.getIdRegistro(), fileContent) || !response.getIsPrivate()) {
 							System.out.println("DOCUMENTO RECUPERADO CORRECTAMENTE");
 						} else {
-							System.out.println("DOCUMENTO ALTERADO POR EL REGISTRADOR");
+							System.out.println("\n!Error: " + "DOCUMENTO ALTERADO POR EL REGISTRADOR");
 						}
 					} else {
-						System.out.println("FALLO DE FIRMA DEL REGISTRADOR");
+						System.out.println("\n!Error: " + "FALLO DE FIRMA DEL REGISTRADOR");
 					}
 
 					file.close();
 				} else {
-					System.out.println("Certificado del servidor no valido");
+					System.out.println("\n!Error: " + "Certificado del servidor no valido");
 				}
 			} else {
-				System.out.println(response.getErrorMsg());
+				System.out.println("\n!Error: " + response.getErrorMsg());
 			}
 
 			out.close();

@@ -44,7 +44,7 @@ public class Util {
 				try {
 					Response res = (Response) response.readObject();
 					if(res.getError()!=0) {
-						System.out.println("Error al guardar el archivo: " + res.getErrorMsg());
+						System.out.println("\n!Error: " + res.getErrorMsg());
 					}else{
 						Certificate certFirma = res.getCert();
 						Path path = Paths.get(ubicacion);
@@ -54,13 +54,13 @@ public class Util {
 
 							if(Validation.checkSign(certFirma, SignRDContent, res.getSigRD())) {
 								Client.saveHash(res.getIdRegistro(), fileContent);
-								System.out.println("Documento correctamente registrado con el numero con ID: " + res.getIdRegistro());
+								System.out.println("\n!Error: " + "Documento correctamente registrado con el numero con ID: " + res.getIdRegistro());
 							}else{
-								System.out.println("SigRD incorrecta");
+								System.out.println("\n!Error: " + "SigRD incorrecta");
 								//SigRD incorrecta
 							}
 						}else{
-							System.out.println("Certificado del servidor no válido");
+							System.out.println("\n!Error: " + "Certificado del servidor no válido");
 							//Cert no valido
 						}
 					}

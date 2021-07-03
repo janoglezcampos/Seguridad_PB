@@ -26,7 +26,7 @@ public class Util2 {
 					CertificateFactory cf = CertificateFactory.getInstance("X.509");
 					Certificate certificate = cf.generateCertificate(inCert);
 
-					String idPropietario = Validation.getIdentity(certificate);
+					String idPropietario = DatabaseEntry.getIdentity(certificate);
 					
 					DataOutputStream out = new DataOutputStream(aClient.getOutputStream());
 					ObjectOutputStream out_obj = new ObjectOutputStream(out);
@@ -43,7 +43,6 @@ public class Util2 {
 						if (confidencialidad.equals("PRIV")) {
 							for (String file : complete.get(1))
 								listToSend.add(DatabaseEntry.recoverEntry(savePath, file).getInfo());
-
 						} else if (confidencialidad.equals("PUB")) {
 							for (String file : complete.get(0))
 								listToSend.add(DatabaseEntry.recoverEntry(savePath, file).getInfo());

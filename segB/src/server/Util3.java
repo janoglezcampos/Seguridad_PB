@@ -29,7 +29,7 @@ public class Util3 {
 					ObjectOutputStream response = new ObjectOutputStream(aClient.getOutputStream());
 					Response res = null;
 
-					String idPropietario = Validation.getIdentity(certificate);
+					String idPropietario = DatabaseEntry.getIdentity(certificate);
 
 					ArrayList<ArrayList<String>> fileList = DatabaseEntry.getFiles(SAVEPATH, idPropietario);
 					ArrayList<String> publico = fileList.get(0);
