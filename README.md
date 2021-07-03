@@ -23,7 +23,7 @@ hash, en un sistema real tampoco se podría comprobar a menos que se enviase
 en la respuesta, por lo tanto tambien se ignora si es publico.
 
 ## General
-* Asignar rutas de guardado y alias de las claves a variables globales en servidor y cliente
+* ~~Asignar rutas de guardado y alias de las claves a variables globales en servidor y cliente~~ :white_check_mark:
 * Obtener tipo de algoritmo de la clave simetrica almacenana en keystore del servidor
 
 ## Hanshake:
@@ -47,15 +47,15 @@ en la respuesta, por lo tanto tambien se ignora si es publico.
 * ~~Verificar firma al recibir ok (cliente)~~ :white_check_mark:
 * ~~Guardar hash archivo enviado y asociarlo al idRegistro (cliente)~~ :white_check_mark:
 * ~~Almacenar todo en un fichero, no en un directorio (server)~~ :white_check_mark:
-* Eliminar archivo enviado (cliente)
+* ~~Eliminar archivo enviado (cliente)~~ :white_check_mark:
 * Reescribir hashes en el txt cuando se repite idRegistor
 
 ## Funcionalidad 2:
-* Generar respuestas serverside (server)
-* Enviar certAuth y no issuerDN (cliente)
-* Validar certAuth (server)
-* Obtener issuerDN del certAuth (server)
-* Enviar datos como una lista (server)
+* ~~Generar respuestas serverside (server)~~
+* ~~Enviar certAuth y no issuerDN (cliente)~~
+* ~~Validar certAuth (server)~~
+* ~~Obtener issuerDN del certAuth (server)~~
+* ~~Enviar datos como una lista (server)~~
 
 
 ## Funcionalidad 3:
@@ -70,9 +70,9 @@ en la respuesta, por lo tanto tambien se ignora si es publico.
 * ~~Verificar certificado de firma_s (cliente)~~ :white_check_mark:
 * ~~Comprobar que sigRD es válida (cliente)~~ :white_check_mark:
 * ~~Computar hash y comparar con el almacenado en Funcionalidad 1 (cliente)~~ :white_check_mark:
-* Enviar nombre del documento (servidor)
-* Guardar con nombre del documento (cliente)
-* Modificar para que cualquiera pueda acceder a los archivos publicos (server)
+* ~~Enviar nombre del documento (servidor)~~
+* ~~Guardar con nombre del documento (cliente)~~
+* ~~Modificar para que cualquiera pueda acceder a los archivos publicos (server)~~
 
 
 ## Opcional:
