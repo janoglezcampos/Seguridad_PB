@@ -14,8 +14,10 @@ public class Client {
 	private static final boolean OCSP_ENABLE = true; // Habilita ocsp stapling
 	private static final boolean OCSP_CLIENT_SIDE_ENABLE = false; // Habilita ocsp client-side si ocsp stapling está
 																	// habilitado
-	public static final String CIPHER_ALIAS = "clientCipher";
-	public static final String SIGN_ALIAS = "clientSign";
+	public static final boolean CHECK_SIGN_IF_PUBLIC = false;
+	
+	public static final String CIPHER_ALIAS = "clientcipher";
+	public static final String SIGN_ALIAS = "clientsign";
 	public static final String AUTH_ALIAS = "clientauth";
 	public static final String SERVER_CIPHER_ALIAS = "servercipher";
 
