@@ -1,6 +1,5 @@
 package server;
 
-
 import java.io.*;
 import java.nio.file.Paths;
 import java.security.*;
@@ -10,7 +9,7 @@ import java.util.*;
 
 import common.*;
 
-public class DatabaseEntry implements Serializable{
+public class DatabaseEntry implements Serializable {
 
 	private static final long serialVersionUID = 12L;
 	private final String signAlias = "serversign";
@@ -25,23 +24,24 @@ public class DatabaseEntry implements Serializable{
 	private String originalFileName;
 	private PublicKey clientPublicKey;
 
-	public DatabaseEntry(int idRegistro, boolean isPrivate, String originalFileName,Certificate certificate, byte[] file, byte[] firmaDoc, KeyStore keystore, String keySignAlias, char[] clave, PublicKey clientPublicKey) throws Exception{
+	public DatabaseEntry(int idRegistro, boolean isPrivate, String originalFileName, Certificate certificate,
+			byte[] file, byte[] firmaDoc, KeyStore keystore, String keySignAlias, char[] clave,
+			PublicKey clientPublicKey) throws Exception {
 		this.firmaDoc = firmaDoc;
 		this.idRegistro = idRegistro;
 		this.isPrivate = isPrivate;
 		this.originalFileName = originalFileName;
 		this.clientPublicKey = clientPublicKey;
 
-		//idPropietario = ((X509Certificate)certificate).getIssuerDN().toString();
 		idPropietario = getIdentity(certificate);
 
-		this.sello= sello();
+		this.sello = sello();
 
 		byte conjunto[] = Validation.getSignRDContent(idRegistro, sello(), idPropietario.toString(), file, firmaDoc);
 
 		sigRD = Validation.signContent(conjunto, (PrivateKey) keystore.getKey(keySignAlias, clave));
 	}
-	
+
 	public String getSignAlias() {
 		return signAlias;
 	}
@@ -85,7 +85,7 @@ public class DatabaseEntry implements Serializable{
 	public PublicKey getClientPublicKey() {
 		return clientPublicKey;
 	}
-	
+
 	public String getInfo() {
 		return idRegistro + "|" + idPropietario + "|" + originalFileName + "|" + sello;
 	}
@@ -100,8 +100,8 @@ public class DatabaseEntry implements Serializable{
 	}
 
 	public String getFileName() {
-		String dataBaseFileName = idRegistro+"_"+idPropietario+".sig";
-		return dataBaseFileName = (!isPrivate) ? dataBaseFileName : dataBaseFileName+".cif";
+		String dataBaseFileName = idRegistro + "_" + idPropietario + ".sig";
+		return dataBaseFileName = (!isPrivate) ? dataBaseFileName : dataBaseFileName + ".cif";
 	}
 
 	public void addFileContent(byte[] content, byte[] cipherParams) {
@@ -113,9 +113,9 @@ public class DatabaseEntry implements Serializable{
 		this.content = content;
 	}
 
-	public static DatabaseEntry recoverEntry(String savePath, String fileName) throws ClassNotFoundException, IOException {
-		FileInputStream fileIn = new FileInputStream(
-				Paths.get(savePath, fileName).toString());
+	public static DatabaseEntry recoverEntry(String savePath, String fileName)
+			throws ClassNotFoundException, IOException {
+		FileInputStream fileIn = new FileInputStream(Paths.get(savePath, fileName).toString());
 		ObjectInputStream objectIn = new ObjectInputStream(fileIn);
 		return (DatabaseEntry) objectIn.readObject();
 	}
@@ -130,24 +130,23 @@ public class DatabaseEntry implements Serializable{
 		int minuto = fecha.get(Calendar.MINUTE);
 		int segundo = fecha.get(Calendar.SECOND);
 
-		String def= anho+"/"+mes+"/"+dia+" "+hora+":"+minuto+":"+segundo;
+		String def = anho + "/" + mes + "/" + dia + " " + hora + ":" + minuto + ":" + segundo;
 		System.out.println(def);
 		return def;
 	}
 
-	public static ArrayList<ArrayList<String>> getFiles(String savePath,String propietario){
-		File[] fileList =new File (savePath).listFiles();
-		
+	public static ArrayList<ArrayList<String>> getFiles(String savePath, String propietario) {
+		File[] fileList = new File(savePath).listFiles();
+
 		ArrayList<ArrayList<String>> complete = new ArrayList<ArrayList<String>>();
 		ArrayList<String> privateFiles = new ArrayList<String>();
 		ArrayList<String> publicFiles = new ArrayList<String>();
 		String name;
-		for(File file: fileList){
+		for (File file : fileList) {
 			name = file.getName();
-			if(name.endsWith(".cif") && name.contains(propietario+".sig")) {
+			if (name.endsWith(".cif") && name.contains(propietario + ".sig")) {
 				privateFiles.add(name);
-			}
-			else if(name.endsWith(".sig")) {
+			} else if (name.endsWith(".sig")) {
 				publicFiles.add(name);
 			}
 		}
@@ -155,36 +154,38 @@ public class DatabaseEntry implements Serializable{
 		complete.add(privateFiles);
 		return complete;
 	}
-	
+
 	/**
 	 * Returns the owner of the file taking
+	 * 
 	 * @param savePath
 	 * @param idRegistro
 	 * @return owner if private, PUB if public or null if the file doesn't exists
 	 */
-	public static String getOwnerByID(String savePath, int idRegistro){
-		File[] fileList =new File (savePath).listFiles();
-		String sId= Integer.toString(idRegistro);
+	public static String getOwnerByID(String savePath, int idRegistro) {
+		File[] fileList = new File(savePath).listFiles();
+		String sId = Integer.toString(idRegistro);
 		String fileName;
-		for(File file: fileList){
-			fileName=file.getName();
-			if(fileName.startsWith(sId)){
-				if(fileName.contains(".cif")) {
-					return fileName.substring(fileName.indexOf("_"),fileName.indexOf(".sig"));
-				}else {
+		for (File file : fileList) {
+			fileName = file.getName();
+			if (fileName.startsWith(sId)) {
+				if (fileName.contains(".cif")) {
+					return fileName.substring(fileName.indexOf("_"), fileName.indexOf(".sig"));
+				} else {
 					return "PUB";
 				}
 			}
 		}
 		return "";
 	}
-	
-	//Dos clientes distintos tienen el mismo issuerDN si su certificado está firmado por la misma CA,
-	//para identificar al propietario es necesario usar el SubejctDN también.
+
+	// Dos clientes distintos tienen el mismo issuerDN si su certificado está
+	// firmado por la misma CA,
+	// para identificar al propietario es necesario usar el SubejctDN también.
 	public static String getIdentity(Certificate cert) {
-		String issuerDN = ((X509Certificate)cert).getIssuerDN().toString();
-		String subjectCN = ((X509Certificate)cert).getSubjectDN().getName();
-		return (Server.ID_FROM_SUBJECT) ? (issuerDN+subjectCN) : issuerDN;
+		String issuerDN = ((X509Certificate) cert).getIssuerDN().toString();
+		String subjectCN = ((X509Certificate) cert).getSubjectDN().getName();
+		return (Server.ID_FROM_SUBJECT) ? (issuerDN + subjectCN) : issuerDN;
 	}
 
 }

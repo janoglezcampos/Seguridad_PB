@@ -52,8 +52,8 @@ public class Util3 {
 						dataEntry = DatabaseEntry.recoverEntry(SAVEPATH, fileToRetrieve);
 						System.out.println("Enviando archivo " + dataEntry.getOriginalFileName());
 
-						res = new Response(Integer.parseInt(idRegistro), idPropietario, dataEntry.getOriginalFileName(),dataEntry.getSello(),
-								dataEntry.getContent(), dataEntry.getSigRD(), serverCertSign);
+						res = new Response(Integer.parseInt(idRegistro), idPropietario, dataEntry.getOriginalFileName(),
+								dataEntry.getSello(), dataEntry.getContent(), dataEntry.getSigRD(), serverCertSign);
 						break;
 					default:
 						for (String fileName : privado) {
@@ -75,9 +75,10 @@ public class Util3 {
 								encripted2send = Encription.encript2sendPGP(decriptedFile,
 										dataEntry.getClientPublicKey());
 
-								res = new Response(Integer.parseInt(idRegistro), idPropietario, dataEntry.getOriginalFileName(), dataEntry.getSello(),
-										encripted2send.get(0), encripted2send.get(1), encripted2send.get(2),
-										dataEntry.getSigRD(), serverCertSign);
+								res = new Response(Integer.parseInt(idRegistro), idPropietario,
+										dataEntry.getOriginalFileName(), dataEntry.getSello(), encripted2send.get(0),
+										encripted2send.get(1), encripted2send.get(2), dataEntry.getSigRD(),
+										serverCertSign);
 							} else {
 								res = new Response(-3);
 							}

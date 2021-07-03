@@ -43,7 +43,7 @@ public class Util2 {
 
 			Response resp = (Response) input_obj.readObject();
 
-			String format = "%-20s%-30s%-30s%-30s%n";
+			String format = "%-20s%-40s%-30s%-30s%n";
 			String fieldName[] = { "ID de registro: ", "ID de propietario: ", "Nombre del documento: ", "Fecha:" };
 			System.out.printf(format, fieldName);
 			if (resp.getError() == 0) {
@@ -59,10 +59,8 @@ public class Util2 {
 			client2.close();
 
 		} catch (IOException | KeyStoreException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

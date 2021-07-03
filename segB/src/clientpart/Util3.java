@@ -85,16 +85,21 @@ public class Util3 {
 					 * hash, en un sistema real tampoco se podría comprobar a menos que se enviase
 					 * en la respuesta, por lo tanto tambien se ignora si es publico.
 					 */
-					if (Validation.checkSign(response.getCert(), SignRDContent, response.getSigRD())
-							|| !response.getIsPrivate()) {
-						file.write(fileContent);
-						if (Client.checkHash(response.getIdRegistro(), fileContent) || !response.getIsPrivate()) {
-							System.out.println("DOCUMENTO RECUPERADO CORRECTAMENTE");
+
+					if (Client.CHECK_SIGN_IF_PUBLIC || response.getIsPrivate()) {
+						if (Validation.checkSign(response.getCert(), SignRDContent, response.getSigRD())) {
+							file.write(fileContent);
+							if (Client.checkHash(response.getIdRegistro(), fileContent) || !response.getIsPrivate()) {
+								System.out.println("DOCUMENTO RECUPERADO CORRECTAMENTE");
+							} else {
+								System.out.println("\n!Error: " + "DOCUMENTO ALTERADO POR EL REGISTRADOR");
+							}
 						} else {
-							System.out.println("\n!Error: " + "DOCUMENTO ALTERADO POR EL REGISTRADOR");
+							System.out.println("\n!Error: " + "FALLO DE FIRMA DEL REGISTRADOR");
 						}
 					} else {
-						System.out.println("\n!Error: " + "FALLO DE FIRMA DEL REGISTRADOR");
+						file.write(fileContent);
+						System.out.println("DOCUMENTO RECUPERADO CORRECTAMENTE (Firma y hash no comprobados)");
 					}
 
 					file.close();
@@ -108,7 +113,6 @@ public class Util3 {
 			out.close();
 			input.close();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

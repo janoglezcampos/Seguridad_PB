@@ -7,10 +7,6 @@ import java.security.cert.*;
 
 import javax.net.ssl.*;
 
-//Arguments:
-
-// /Users/lexy/Desktop/Clases/Seguridad/almacenes/keystoreClient.jceks
-// /Users/lexy/Desktop/Clases/Seguridad/almacenes/truststoreClient.jceks
 public class Client {
 	private static final String SERVER_ADDRESS = "localhost";
 	private static final int SERVER_PORT = 443;
@@ -18,9 +14,10 @@ public class Client {
 	private static final boolean OCSP_ENABLE = true; // Habilita ocsp stapling
 	private static final boolean OCSP_CLIENT_SIDE_ENABLE = false; // Habilita ocsp client-side si ocsp stapling está
 																	// habilitado
-
-	public static final String CIPHER_ALIAS = "clientCipher";
-	public static final String SIGN_ALIAS = "clientSign";
+	public static final boolean CHECK_SIGN_IF_PUBLIC = false;
+	
+	public static final String CIPHER_ALIAS = "clientcipher";
+	public static final String SIGN_ALIAS = "clientsign";
 	public static final String AUTH_ALIAS = "clientauth";
 	public static final String SERVER_CIPHER_ALIAS = "servercipher";
 
@@ -76,8 +73,6 @@ public class Client {
 				String passwd_key = reader.readLine();
 				try {
 					loadStores(args, passwd_key);
-					// La clave que aqui se introduce es la de las claves, no la del keystore, en
-					// este caso es la misma
 					Util.sendFile(conexion(), confidencialidad, ubicacion, passwd_key);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -96,7 +91,6 @@ public class Client {
 					loadStores(args, passwd_key2);
 					Util2.start(conexion(), confidencialidad);
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				control = 1;
@@ -219,34 +213,9 @@ public class Client {
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");
 
 		ocspProperties(OCSP_ENABLE, OCSP_CLIENT_SIDE_ENABLE);
-		/*
-		 * if (revocationCheck) { try { CertPathBuilder certBuilder =
-		 * CertPathBuilder.getInstance("PKIX"); PKIXRevocationChecker revocationChecker
-		 * = (PKIXRevocationChecker) certBuilder.getRevocationChecker();
-		 * revocationChecker.setOptions(EnumSet.of(PKIXRevocationChecker.Option.
-		 * NO_FALLBACK));
-		 * 
-		 * PKIXBuilderParameters pkixParams = new PKIXBuilderParameters(trustedStore,
-		 * new X509CertSelector()); // pkixParams.addCertPathChecker(revocationChecker);
-		 * pkixParams.setRevocationEnabled(true); ManagerFactoryParameters mfp = new
-		 * CertPathTrustManagerParameters(pkixParams); tmf.init(mfp); } catch (Exception
-		 * e) { System.out.println("Exception on OCSP setup:" + e); System.exit(0); } }
-		 * else { tmf.init(trustedStore); }
-		 */
+
 		tmf.init(trustedStore);
 		trustManagers = tmf.getTrustManagers();
-
-		/*
-		 * System.setProperty("javax.net.ssl.keyStore", args[0]);
-		 * System.setProperty("javax.net.ssl.keyStoreType", "JCEKS");
-		 * System.setProperty("javax.net.ssl.keyStorePassword", passwd_key);
-		 * 
-		 * //System.setProperty("jdk.security.allowNonCaAnchor", "true" );
-		 * 
-		 * System.setProperty("javax.net.ssl.trustStore", args[1]);
-		 * System.setProperty("javax.net.ssl.trustStoreType", "JCEKS");
-		 * System.setProperty("javax.net.ssl.trustStorePassword", passwd_key);
-		 */
 	}
 
 	public static KeyStore getTrust() {
