@@ -1,4 +1,5 @@
 package clientpart;
+package com.lexy.ocsp.client;
 
 import java.io.*;
 import java.net.*;
@@ -8,8 +9,13 @@ import java.security.cert.*;
 import javax.net.ssl.*;
 
 public class Client {
+	private static final String CLIENT_KEYSTORE = "/home/lexy/Documents/clases/seg/Practica_B/stores/clientKeystore.jceks";
+	private static final String CLIENT_TRUSTSTORE = "/home/lexy/Documents/clases/seg/Practica_B/stores/clientTruststore.jceks";
+	
+	public static final String PASSWORD = "32004";
+	
 	private static final String SERVER_ADDRESS = "localhost";
-	private static final int SERVER_PORT = 443;
+	private static final int SERVER_PORT = 5000;
 
 	private static final boolean OCSP_ENABLE = true; // Habilita ocsp stapling
 	private static final boolean OCSP_CLIENT_SIDE_ENABLE = true; // Habilita ocsp client-side si ocsp stapling está
@@ -21,14 +27,9 @@ public class Client {
 	public static void main(String[] args) throws IOException, KeyManagementException, UnrecoverableKeyException,
 			KeyStoreException, SignatureException {
 
-		if (args.length != 2) {
-			System.out.println("Numero de parametros incorrecto, introduzca keyStore y trustStore");
-			System.exit(0);
-		}
-
 		try {
 			ocspProperties(OCSP_ENABLE, OCSP_CLIENT_SIDE_ENABLE);
-			loadStores(args, "clientpass");
+			loadStores(CLIENT_KEYSTORE,CLIENT_TRUSTSTORE, PASSWORD);
 			DataOutputStream out = new DataOutputStream(connect().getOutputStream());
 			String op = "1";
 			out.writeInt(op.getBytes().length);
@@ -42,7 +43,6 @@ public class Client {
 	}
 
 	private static SSLSocket connect() throws KeyManagementException, UnknownHostException, IOException {
-
 		SSLContext sc = null;
 		try {
 			sc = SSLContext.getInstance("TLS");
@@ -83,11 +83,11 @@ public class Client {
 		return enabled;
 	}
 
-	private static void loadStores(String[] args, String passwd_key) throws KeyStoreException, NoSuchAlgorithmException,
+	private static void loadStores(String keyStorePath, String trustStorePath, String passwd_key) throws KeyStoreException, NoSuchAlgorithmException,
 			CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException {
 
 		KeyStore keyStore = KeyStore.getInstance("JCEKS");
-		keyStore.load(new FileInputStream(args[0]), passwd_key.toCharArray());
+		keyStore.load(new FileInputStream(keyStorePath), passwd_key.toCharArray());
 
 
 		KeyManagerFactory kmf = KeyManagerFactory.getInstance("PKIX");
@@ -97,7 +97,7 @@ public class Client {
 
 		KeyStore trustedStore = KeyStore.getInstance("JCEKS");
 
-		trustedStore.load(new FileInputStream(args[1]), passwd_key.toCharArray());
+		trustedStore.load(new FileInputStream(trustStorePath), passwd_key.toCharArray());
 
 
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance("PKIX");

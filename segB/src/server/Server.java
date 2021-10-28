@@ -1,4 +1,6 @@
 package server;
+package com.lexy.ocsp.server;
+
 
 import java.io.*;
 import java.net.*;
@@ -7,11 +9,16 @@ import java.security.cert.*;
 import javax.net.ssl.*;
 
 public class Server {
-	public static final int SERVER_PORT = 443;
+	private static final String SERVER_KEYSTORE = "/home/lexy/Documents/clases/seg/Practica_B/stores/serverKeystore.jceks";
+	private static final String SERVER_TRUSTSTORE = "/home/lexy/Documents/clases/seg/Practica_B/stores/serverTruststore.jceks";
+	
+	public static final String PASSWORD = "32004";
+	
+	public static final int SERVER_PORT = 5000;
 
 	public static final String AUTHALIAS = "serverauth";
 
-	private static final boolean OCSP_ENABLE = false;
+	private static final boolean OCSP_ENABLE = true;
 	public static final boolean ID_FROM_SUBJECT = true;
 
 	private static TrustManager[] trustManagers;
@@ -20,18 +27,11 @@ public class Server {
 	public static void main(String[] args) {
 		System.out.println(System.getProperty("java.version"));
 		try {
-			if (args.length != 4) {
-				System.out.println(
-						"Número de parametros incorrecto, introduzca keyStore, trustStore, contraseñaKeyStore y algoritmoCifrado");
-				System.exit(0);
-			}
-
 			System.out.println("INICIANDO CONEXION");
-			start(args[0], args[1], args[2], args[3]);
+			start(SERVER_KEYSTORE, SERVER_TRUSTSTORE, PASSWORD);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	static class ServerParameters {
@@ -49,7 +49,7 @@ public class Server {
 		}
 	}
 
-	public static void start(String keyStorePath, String trustStorePath, String password, String chipherAlgoritm)
+	public static void start(String keyStorePath, String trustStorePath, String password)
 			throws Exception {
 		System.out.println("INICIANDO ALMACENES");
 		ServerParameters servParams = new ServerParameters();
@@ -66,9 +66,7 @@ public class Server {
 		store(keyStorePath, trustStorePath, password);
 
 		SSLContext sc = SSLContext.getInstance("TLS");
-		final X509KeyManager origKm = (X509KeyManager) keyManagers[0];
-		X509KeyManager km = new CustomKeyManager(AUTHALIAS, origKm);
-		sc.init(new KeyManager[] { km }, trustManagers, null);
+		sc.init(keyManagers, trustManagers, null);
 
 		// SSLServerSocketFactory sslssf = new CustomizedServerSocketFactory(sc,
 		// servParams.protocols, servParams.ciphers);
@@ -92,18 +90,6 @@ public class Server {
 				DataInputStream input = new DataInputStream(client.getInputStream());
 				System.out.println("Operación entrante");
 				String operacion = new String(input.readNBytes(input.readInt()));
-				// input.close();
-				switch (operacion) {
-				case "1":
-					break;
-				case "2":
-					break;
-				case "3":
-					break;
-				default:
-					System.out.println("Operación desconocida");
-					break;
-				}
 			} catch (Exception e) {
 				System.out.println("Error ejecutando durante la comunicacion");
 				e.printStackTrace();
@@ -139,49 +125,6 @@ public class Server {
 
 	}
 
-	// Modificando CustomKeyManager podemos definir SIEMPRE que certificado
-	// enviamos, así podemos asegurar que la comprobación ocsp se hace
-	// sobre el certificado que queremos
-	static class CustomKeyManager implements X509KeyManager {
-
-		private String certAlias;
-		private X509KeyManager originalKm;
-
-		public CustomKeyManager(String alias, X509KeyManager km) {
-			this.certAlias = alias;
-			this.originalKm = km;
-		}
-
-		@Override
-		public String[] getClientAliases(String keyType, Principal[] issuers) {
-			return originalKm.getClientAliases(keyType, issuers);
-		}
-
-		@Override
-		public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket) {
-			return originalKm.chooseClientAlias(keyType, issuers, socket);
-		}
-
-		@Override
-		public String[] getServerAliases(String keyType, Principal[] issuers) {
-			return originalKm.getServerAliases(keyType, issuers);
-		}
-
-		@Override
-		public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
-			return certAlias;
-		}
-
-		@Override
-		public X509Certificate[] getCertificateChain(String alias) {
-			return originalKm.getCertificateChain(alias);
-		}
-
-		@Override
-		public PrivateKey getPrivateKey(String alias) {
-			return originalKm.getPrivateKey(alias);
-		}
-
-	}
 
 }
+
