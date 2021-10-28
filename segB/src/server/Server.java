@@ -9,22 +9,13 @@ import javax.net.ssl.*;
 public class Server {
 	public static final int SERVER_PORT = 443;
 
-	public static final String SAVEPATH = "/Users/lexy/Desktop/Clases/Seguridad/serverSavedFiles/";
-
-	public static final String CIPHERALIAS = "serverCipher";
-	public static final String SIGNALIAS = "serverSign";
 	public static final String AUTHALIAS = "serverauth";
-	public static final String SECRETKEYALIAS = "dataenckey";
 
 	private static final boolean OCSP_ENABLE = false;
-	public static final boolean ID_FROM_SUBJECT = false;
+	public static final boolean ID_FROM_SUBJECT = true;
 
 	private static TrustManager[] trustManagers;
 	private static KeyManager[] keyManagers;
-	private static KeyStore trust;
-	private static KeyStore key;
-
-	private static int contador;
 
 	public static void main(String[] args) {
 		System.out.println(System.getProperty("java.version"));
@@ -93,13 +84,10 @@ public class Server {
 		System.out.println("Esperando conexión... (OCSP habilitado: "
 				+ System.getProperty("jdk.tls.server.enableStatusRequestExtension") + ")");
 
-		initContador();
-		while (true) {
 			try {
 				Socket client = serverSocket1.accept();
 				System.out.println(client.getRemoteSocketAddress().toString());
 				System.out.println("Client accepted");
-				client.setSoLinger(true, 10000);
 
 				DataInputStream input = new DataInputStream(client.getInputStream());
 				System.out.println("Operación entrante");
@@ -107,13 +95,10 @@ public class Server {
 				// input.close();
 				switch (operacion) {
 				case "1":
-					Util.receiveFile(client, chipherAlgoritm, password);
 					break;
 				case "2":
-					Util2.start(client);
 					break;
 				case "3":
-					Util3.retrieveFile(client, chipherAlgoritm, password);
 					break;
 				default:
 					System.out.println("Operación desconocida");
@@ -123,7 +108,6 @@ public class Server {
 				System.out.println("Error ejecutando durante la comunicacion");
 				e.printStackTrace();
 			}
-		}
 	}
 
 	public static void store(String keyStorePath, String trustStorePath, String passKeystore)
@@ -139,7 +123,6 @@ public class Server {
 		keyStore = KeyStore.getInstance("JCEKS");
 		keyStore.load(new FileInputStream(keyStorePath), clave);
 
-		key = keyStore;
 
 		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		kmf.init(keyStore, clave);
@@ -149,45 +132,11 @@ public class Server {
 		trustedStore = KeyStore.getInstance("JCEKS");
 		trustedStore.load(new FileInputStream(trustStorePath), clave);
 
-		trust = trustedStore;
-
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 		tmf.init(trustedStore);
 
 		trustManagers = tmf.getTrustManagers();
 
-	}
-
-	public static KeyStore getTrust() {
-		return trust;
-	}
-
-	public static KeyStore getKeyStore() {
-		return key;
-	}
-
-	private static void initContador() {
-		File[] fileList = new File(SAVEPATH).listFiles();
-		String fileName;
-		int lastCounter = -1;
-		int idRegistro = 0;
-		for (File file : fileList) {
-			fileName = file.getName();
-			if (fileName.contains(".sig")) {
-				idRegistro = Integer.parseInt(fileName.split("_")[0]);
-				if (idRegistro > lastCounter)
-					lastCounter = idRegistro;
-			}
-		}
-		contador = lastCounter + 1;
-	}
-
-	public static int getContador() {
-		return contador;
-	}
-
-	public static void incremetarContador() {
-		contador += 1;
 	}
 
 	// Modificando CustomKeyManager podemos definir SIEMPRE que certificado
