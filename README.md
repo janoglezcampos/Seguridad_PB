@@ -1,3 +1,48 @@
+# Guia de configuración:
+Constantes de configuración:
+
+Cliente:
+
+	* OCSP_ENABLE: Habilita la comprobación de revocación de certificados.
+	* OCSP_CLIENT_SIDE_ENABLE: Habilita la comprobación desde el lado del cliente.
+	* CHECK_SIGN_IF_PUBLIC: Habilita la compración de firma para archivos publicos.
+	* HASH_DATABASE: Ruta del archivo txt de guardado de hashes.
+	* SAVE_PATH : Ruta de guardado de archivos recuperados.
+
+Server: 
+
+	* OCSP_ENABLE: Habilita la comprobación de revocación de certificados del lado del servidor.
+	* ID_FROM_SUBJECT: Usa el subjectDN además del issuerDN para identificar a los usuarios.
+	* SAVEPATH: Ruta de guardado de los archivos recibidos.
+
+Notas:
+
+	* El certificado usado por el servidor para el handshake es siempre el indicado en AUTHALIAS.
+	* El algoritmo de la clave simetrica debe ser RC2.
+	* El servidor OCSP debe ser inciado en el puerto local 9999.
+
+
+
+Claves de los keystores y truststores de la práctica:
+
+> Servidor: serverpass (para todo, claves, keystore y trustestore)
+
+> Cliente: clientpass (para todo, ambos clientes, claves, keystore y trustore)
+
+
+
+# Ejemplo de argumentos de ejecución:
+
+### Servidor:
+	/Users/lexy/Desktop/Clases/Seguridad/almacenes/keystoreServidor.jceks
+	/Users/lexy/Desktop/Clases/Seguridad/almacenes/truststoreServidor.jceks
+	serverpass
+	RC2
+
+### Cliente:
+	/Users/lexy/Desktop/Clases/Seguridad/almacenes/client_1/keystoreClient_1.jceks
+	/Users/lexy/Desktop/Clases/Seguridad/almacenes/truststoreClient.jceks
+
 # Lista de tareas:
 
 __Problema en el enunciado!__
